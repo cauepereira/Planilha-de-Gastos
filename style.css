@@ -51,10 +51,7 @@ body {
   min-height: 460px;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
-  transform-style: preserve-3d;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-  will-change: transform;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
 }
 
 /* Painel esquerdo */
