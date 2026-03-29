@@ -411,7 +411,14 @@ body.light .hist-item:hover { background: #e8eaf6; }
   margin-left: 220px;
   flex: 1;
   padding: 28px 24px;
-  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.main > .view {
+  width: 100%;
+  max-width: 860px;
 }
 
 .view { display: none; }
