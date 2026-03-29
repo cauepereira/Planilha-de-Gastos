@@ -51,7 +51,10 @@ body {
   min-height: 460px;
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+  transform-style: preserve-3d;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  will-change: transform;
 }
 
 /* Painel esquerdo */
@@ -74,17 +77,58 @@ body {
 }
 
 .login-left-icon {
-  font-size: 3.5rem;
-  margin-bottom: 16px;
-  display: block;
-  background: rgba(255,255,255,0.15);
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  margin: 0 auto 20px;
+  position: relative;
+  width: 110px;
+  height: 110px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 20px;
+}
+
+.icon-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-icon {
+  width: 70px;
+  height: 90px;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.3));
+  animation: pinFloat 3s ease-in-out infinite;
+}
+
+@keyframes pinFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+  animation: ringPulse 3s ease-out infinite;
+}
+
+.ring1 {
+  width: 90px; height: 90px;
+  animation-delay: 0s;
+}
+
+.ring2 {
+  width: 110px; height: 110px;
+  animation-delay: 0.8s;
+}
+
+@keyframes ringPulse {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(1.3); opacity: 0; }
 }
 
 .login-left-content h1 {

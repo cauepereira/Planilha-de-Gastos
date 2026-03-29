@@ -517,6 +517,22 @@ document.getElementById('nextMonth').addEventListener('click', () => {
   loadItems();
 });
 
+// ---- Efeito 3D no card de login ----
+const loginCard = document.querySelector('.login-card');
+if (loginCard) {
+  loginCard.addEventListener('mousemove', (e) => {
+    const rect = loginCard.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    loginCard.style.transform = `perspective(1000px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) scale(1.02)`;
+    loginCard.style.boxShadow = `${-x * 20}px ${y * 20}px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)`;
+  });
+  loginCard.addEventListener('mouseleave', () => {
+    loginCard.style.transform = 'perspective(1000px) rotateY(0) rotateX(0) scale(1)';
+    loginCard.style.boxShadow = '0 24px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05)';
+  });
+}
+
 // ---- Tema ----
 const themeBtn = document.getElementById('themeBtn');
 
