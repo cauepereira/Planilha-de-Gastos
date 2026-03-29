@@ -12,13 +12,35 @@
 
   <!-- Tela de Login -->
   <div id="loginScreen" class="login-screen">
-    <div class="login-box">
-      <div class="login-logo">💸 Planilha de Gastos</div>
-      <p>Faça login para sincronizar seus dados em todos os dispositivos.</p>
-      <button id="loginBtn" class="login-google-btn">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" />
-        Entrar com Google
-      </button>
+    <div class="login-card">
+
+      <!-- Painel esquerdo -->
+      <div class="login-left">
+        <div class="login-left-content">
+          <div class="login-left-icon">💸</div>
+          <h1>Planilha de Gastos</h1>
+          <p>Controle suas finanças de qualquer lugar, em qualquer dispositivo.</p>
+        </div>
+        <div class="login-waves">
+          <svg viewBox="0 0 100 300" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,0 L70,0 Q50,75 70,150 Q50,225 70,300 L0,300 Z" fill="rgba(255,255,255,0.07)"/>
+            <path d="M0,0 L80,0 Q55,75 80,150 Q55,225 80,300 L0,300 Z" fill="rgba(255,255,255,0.05)"/>
+            <path d="M0,0 L90,0 Q60,75 90,150 Q60,225 90,300 L0,300 Z" fill="rgba(255,255,255,0.04)"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Painel direito -->
+      <div class="login-right">
+        <h2>Bem-vindo de volta</h2>
+        <p class="login-sub">Entre com sua conta Google para acessar seus dados.</p>
+        <button id="loginBtn" class="login-google-btn">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="22" />
+          Entrar com Google
+        </button>
+        <span class="login-note">Seus dados ficam salvos na nuvem e sincronizam entre todos os seus dispositivos.</span>
+      </div>
+
     </div>
   </div>
 

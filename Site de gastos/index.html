@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planilha de Gastos</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">💸 Gastos</div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-view="dashboard">📊 Dashboard</button>
+        <button class="nav-btn" data-view="historico">📅 Histórico</button>
+      </nav>
+      <div class="sidebar-month">
+        <button id="prevMonth">&#8592;</button>
+        <span id="currentMonthLabel"></span>
+        <button id="nextMonth">&#8594;</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+      <!-- Dashboard View -->
+      <div id="view-dashboard" class="view active">
+
+        <div class="page-header">
+          <h2 id="headerMonth"></h2>
+          <span id="headerYear" class="year-badge"></span>
+        </div>
+
+        <!-- Cards -->
+        <div class="cards">
+          <div class="card card-receita">
+            <div class="card-icon">⬆️</div>
+            <div class="card-info">
+              <span>Receitas</span>
+              <strong id="totalReceita">R$ 0,00</strong>
+            </div>
+          </div>
+          <div class="card card-despesa">
+            <div class="card-icon">⬇️</div>
+            <div class="card-info">
+              <span>Despesas</span>
+              <strong id="totalDespesa">R$ 0,00</strong>
+            </div>
+          </div>
+          <div class="card card-saldo">
+            <div class="card-icon">💼</div>
+            <div class="card-info">
+              <span>Saldo</span>
+              <strong id="totalSaldo">R$ 0,00</strong>
+            </div>
+          </div>
+          <div class="card card-itens">
+            <div class="card-icon">📋</div>
+            <div class="card-info">
+              <span>Lançamentos</span>
+              <strong id="totalItens">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de progresso -->
+        <div class="progress-section">
+          <div class="progress-labels">
+            <span>Receitas</span>
+            <span>Despesas</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-receita" id="barReceita"></div>
+            <div class="progress-bar-despesa" id="barDespesa"></div>
+          </div>
+          <div class="progress-pct">
+            <span id="pctReceita">0%</span>
+            <span id="pctDespesa">0%</span>
+          </div>
+        </div>
+
+        <!-- Categorias -->
+        <div class="cat-section">
+          <h3>Por Categoria</h3>
+          <div id="catList" class="cat-list"></div>
+        </div>
+
+        <!-- Formulário -->
+        <div class="form-card">
+          <h3>Novo Lançamento</h3>
+          <div class="form-grid">
+            <input type="text" id="descricao" placeholder="Descrição" />
+            <input type="number" id="valor" placeholder="Valor (R$)" min="0" step="0.01" />
+            <select id="tipo">
+              <option value="receita">⬆️ Receita</option>
+              <option value="despesa">⬇️ Despesa</option>
+            </select>
+            <select id="categoria">
+              <option value="Salário">💰 Salário</option>
+              <option value="Freelance">💻 Freelance</option>
+              <option value="Investimento">📈 Investimento</option>
+              <option value="Alimentação">🍔 Alimentação</option>
+              <option value="Transporte">🚗 Transporte</option>
+              <option value="Moradia">🏠 Moradia</option>
+              <option value="Saúde">💊 Saúde</option>
+              <option value="Lazer">🎮 Lazer</option>
+              <option value="Educação">📚 Educação</option>
+              <option value="Roupas">👕 Roupas</option>
+              <option value="Outros">📦 Outros</option>
+            </select>
+            <input type="date" id="data" />
+            <button id="addBtn">+ Adicionar</button>
+          </div>
+        </div>
+
+        <!-- Lista -->
+        <div class="list-card">
+          <div class="list-header">
+            <h3>Lançamentos</h3>
+            <div class="filter-btns">
+              <button class="filter-btn active" data-filter="todos">Todos</button>
+              <button class="filter-btn" data-filter="receita">Receitas</button>
+              <button class="filter-btn" data-filter="despesa">Despesas</button>
+            </div>
+          </div>
+          <ul id="listaItens"></ul>
+          <p id="emptyMsg" class="empty-msg">Nenhum lançamento neste mês.</p>
+        </div>
+
+      </div>
+
+      <!-- Histórico View -->
+      <div id="view-historico" class="view">
+        <div class="page-header">
+          <h2>Histórico Mensal</h2>
+        </div>
+        <div id="historicoList" class="historico-list"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Modal de Edição -->
+  <div id="editModal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Editar Lançamento</h3>
+        <button id="closeModal" class="btn-close">✕</button>
+      </div>
+      <div class="form-grid">
+        <input type="text" id="editDescricao" placeholder="Descrição" />
+        <input type="number" id="editValor" placeholder="Valor (R$)" min="0" step="0.01" />
+        <select id="editTipo">
+          <option value="receita">⬆️ Receita</option>
+          <option value="despesa">⬇️ Despesa</option>
+        </select>
+        <select id="editCategoria">
+          <option value="Salário">💰 Salário</option>
+          <option value="Freelance">💻 Freelance</option>
+          <option value="Investimento">📈 Investimento</option>
+          <option value="Alimentação">🍔 Alimentação</option>
+          <option value="Transporte">🚗 Transporte</option>
+          <option value="Moradia">🏠 Moradia</option>
+          <option value="Saúde">💊 Saúde</option>
+          <option value="Lazer">🎮 Lazer</option>
+          <option value="Educação">📚 Educação</option>
+          <option value="Roupas">👕 Roupas</option>
+          <option value="Outros">📦 Outros</option>
+        </select>
+        <input type="date" id="editData" />
+        <button id="saveEditBtn">💾 Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
