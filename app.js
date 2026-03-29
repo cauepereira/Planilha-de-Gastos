@@ -293,8 +293,32 @@ document.getElementById('nextMonth').addEventListener('click', () => {
   loadItems();
 });
 
+// ---- Hamburguer menu ----
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+function openSidebar() {
+  sidebar.classList.add('open');
+  sidebarOverlay.classList.add('active');
+}
+
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  sidebarOverlay.classList.remove('active');
+}
+
+hamburgerBtn.addEventListener('click', () => {
+  sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+});
+
+sidebarOverlay.addEventListener('click', closeSidebar);
+
 document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => switchView(btn.dataset.view));
+  btn.addEventListener('click', () => {
+    switchView(btn.dataset.view);
+    closeSidebar();
+  });
 });
 
 document.querySelectorAll('.filter-btn').forEach(btn => {
