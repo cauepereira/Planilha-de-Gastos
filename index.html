@@ -57,6 +57,7 @@
       <div class="logo">💸 Gastos</div>
       <nav class="sidebar-nav">
         <button class="nav-btn active" data-view="dashboard">📊 Dashboard</button>
+        <button class="nav-btn" data-view="graficos">📈 Gráficos</button>
         <button class="nav-btn" data-view="historico">📅 Histórico</button>
       </nav>
       <div class="sidebar-month">
@@ -181,6 +182,29 @@
 
       </div>
 
+      <!-- Gráficos View -->
+      <div id="view-graficos" class="view">
+        <div class="page-header">
+          <h2>Gráficos</h2>
+          <span id="headerYearGraficos" class="year-badge"></span>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-card chart-full">
+            <h3>Receitas vs Despesas — Últimos 6 meses</h3>
+            <div class="chart-wrap"><canvas id="chartLinha"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h3>Receitas vs Despesas — Mês atual</h3>
+            <div class="chart-wrap"><canvas id="chartColuna"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h3>Despesas por Categoria</h3>
+            <div class="chart-wrap chart-wrap-pizza"><canvas id="chartPizza"></canvas></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Histórico View -->
       <div id="view-historico" class="view">
         <div class="page-header">
@@ -226,6 +250,7 @@
   </div>
 
   <!-- Firebase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="app.js"></script>
 </body>
 </html>

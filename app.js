@@ -204,7 +204,118 @@ function renderLista(items) {
   `).join('');
 }
 
-// ---- Histórico ----
+// ---- Gráficos ----
+let chartLinha = null, chartColuna = null, chartPizza = null;
+
+const CHART_DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: { legend: { labels: { color: '#e8eaf6', font: { family: 'Inter' } } } },
+};
+
+async function renderGraficos() {
+  if (!currentUser) return;
+
+  document.getElementById('headerYearGraficos').textContent = currentYear;
+
+  // Busca todos os itens do usuário
+  const { data } = await supabase
+    .from('items')
+    .select('tipo, valor, year, month, categoria')
+    .eq('user_id', currentUser.id);
+
+  if (!data) return;
+
+  // --- Gráfico de linha: últimos 6 meses ---
+  const labels = [];
+  const receitasLinha = [];
+  const despesasLinha = [];
+
+  for (let i = 5; i >= 0; i--) {
+    let m = currentMonth - i;
+    let y = currentYear;
+    while (m < 0) { m += 12; y--; }
+    labels.push(`${MONTHS[m].slice(0,3)} ${y}`);
+    const monthItems = data.filter(d => d.year === y && d.month === m);
+    receitasLinha.push(monthItems.filter(d => d.tipo === 'receita').reduce((s, d) => s + Number(d.valor), 0));
+    despesasLinha.push(monthItems.filter(d => d.tipo === 'despesa').reduce((s, d) => s + Number(d.valor), 0));
+  }
+
+  if (chartLinha) chartLinha.destroy();
+  chartLinha = new Chart(document.getElementById('chartLinha'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Receitas', data: receitasLinha, borderColor: '#00c896', backgroundColor: 'rgba(0,200,150,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#00c896' },
+        { label: 'Despesas', data: despesasLinha, borderColor: '#ff5c7c', backgroundColor: 'rgba(255,92,124,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#ff5c7c' },
+      ]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      scales: {
+        x: { ticks: { color: '#7b82a8' }, grid: { color: '#2e3250' } },
+        y: { ticks: { color: '#7b82a8', callback: v => 'R$' + v.toLocaleString('pt-BR') }, grid: { color: '#2e3250' } }
+      }
+    }
+  });
+
+  // --- Gráfico de colunas: mês atual ---
+  const mesAtual = data.filter(d => d.year === currentYear && d.month === currentMonth);
+  const receitaMes = mesAtual.filter(d => d.tipo === 'receita').reduce((s, d) => s + Number(d.valor), 0);
+  const despesaMes = mesAtual.filter(d => d.tipo === 'despesa').reduce((s, d) => s + Number(d.valor), 0);
+
+  if (chartColuna) chartColuna.destroy();
+  chartColuna = new Chart(document.getElementById('chartColuna'), {
+    type: 'bar',
+    data: {
+      labels: ['Receitas', 'Despesas'],
+      datasets: [{
+        data: [receitaMes, despesaMes],
+        backgroundColor: ['rgba(0,200,150,0.7)', 'rgba(255,92,124,0.7)'],
+        borderColor: ['#00c896', '#ff5c7c'],
+        borderWidth: 2,
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: { ...CHART_DEFAULTS.plugins, legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#7b82a8' }, grid: { color: '#2e3250' } },
+        y: { ticks: { color: '#7b82a8', callback: v => 'R$' + v.toLocaleString('pt-BR') }, grid: { color: '#2e3250' } }
+      }
+    }
+  });
+
+  // --- Gráfico de pizza: categorias do mês ---
+  const catMap = {};
+  mesAtual.filter(d => d.tipo === 'despesa').forEach(d => {
+    const cat = d.categoria || 'Outros';
+    catMap[cat] = (catMap[cat] || 0) + Number(d.valor);
+  });
+
+  const catLabels = Object.keys(catMap);
+  const catValues = Object.values(catMap);
+  const catColors = catLabels.map(c => CAT_COLORS[c] || '#7b82a8');
+
+  if (chartPizza) chartPizza.destroy();
+  chartPizza = new Chart(document.getElementById('chartPizza'), {
+    type: 'doughnut',
+    data: {
+      labels: catLabels,
+      datasets: [{ data: catValues, backgroundColor: catColors, borderColor: '#1a1d27', borderWidth: 3 }]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#e8eaf6', font: { family: 'Inter', size: 12 }, padding: 16 } },
+        tooltip: { callbacks: { label: ctx => ` R$ ${Number(ctx.raw).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` } }
+      }
+    }
+  });
+}
 async function renderHistorico() {
   const container = document.getElementById('historicoList');
   container.innerHTML = '<p class="empty-msg">Carregando...</p>';
@@ -260,6 +371,7 @@ function switchView(name) {
   document.getElementById(`view-${name}`).classList.add('active');
   document.querySelector(`[data-view="${name}"]`).classList.add('active');
   if (name === 'historico') renderHistorico();
+  if (name === 'graficos') renderGraficos();
 }
 
 // ---- Events ----
