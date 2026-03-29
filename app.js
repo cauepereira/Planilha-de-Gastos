@@ -213,6 +213,15 @@ const CHART_DEFAULTS = {
   plugins: { legend: { labels: { color: '#e8eaf6', font: { family: 'Inter' } } } },
 };
 
+function getChartColors() {
+  const isLight = document.body.classList.contains('light');
+  return {
+    text: isLight ? '#1a1d27' : '#e8eaf6',
+    muted: isLight ? '#6b7280' : '#7b82a8',
+    grid: isLight ? '#d0d4e8' : '#2e3250',
+  };
+}
+
 async function renderGraficos() {
   if (!currentUser) return;
 
@@ -241,6 +250,12 @@ async function renderGraficos() {
     despesasLinha.push(monthItems.filter(d => d.tipo === 'despesa').reduce((s, d) => s + Number(d.valor), 0));
   }
 
+  const c = getChartColors();
+  const scaleOpts = {
+    x: { ticks: { color: c.muted }, grid: { color: c.grid } },
+    y: { ticks: { color: c.muted, callback: v => 'R$' + v.toLocaleString('pt-BR') }, grid: { color: c.grid } }
+  };
+
   if (chartLinha) chartLinha.destroy();
   chartLinha = new Chart(document.getElementById('chartLinha'), {
     type: 'line',
@@ -252,11 +267,9 @@ async function renderGraficos() {
       ]
     },
     options: {
-      ...CHART_DEFAULTS,
-      scales: {
-        x: { ticks: { color: '#7b82a8' }, grid: { color: '#2e3250' } },
-        y: { ticks: { color: '#7b82a8', callback: v => 'R$' + v.toLocaleString('pt-BR') }, grid: { color: '#2e3250' } }
-      }
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: c.text, font: { family: 'Inter' } } } },
+      scales: scaleOpts
     }
   });
 
@@ -274,17 +287,13 @@ async function renderGraficos() {
         data: [receitaMes, despesaMes],
         backgroundColor: ['rgba(0,200,150,0.7)', 'rgba(255,92,124,0.7)'],
         borderColor: ['#00c896', '#ff5c7c'],
-        borderWidth: 2,
-        borderRadius: 8,
+        borderWidth: 2, borderRadius: 8,
       }]
     },
     options: {
-      ...CHART_DEFAULTS,
-      plugins: { ...CHART_DEFAULTS.plugins, legend: { display: false } },
-      scales: {
-        x: { ticks: { color: '#7b82a8' }, grid: { color: '#2e3250' } },
-        y: { ticks: { color: '#7b82a8', callback: v => 'R$' + v.toLocaleString('pt-BR') }, grid: { color: '#2e3250' } }
-      }
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: scaleOpts
     }
   });
 
@@ -297,20 +306,20 @@ async function renderGraficos() {
 
   const catLabels = Object.keys(catMap);
   const catValues = Object.values(catMap);
-  const catColors = catLabels.map(c => CAT_COLORS[c] || '#7b82a8');
+  const catColors = catLabels.map(cat => CAT_COLORS[cat] || '#7b82a8');
 
   if (chartPizza) chartPizza.destroy();
   chartPizza = new Chart(document.getElementById('chartPizza'), {
     type: 'doughnut',
     data: {
       labels: catLabels,
-      datasets: [{ data: catValues, backgroundColor: catColors, borderColor: '#1a1d27', borderWidth: 3 }]
+      datasets: [{ data: catValues, backgroundColor: catColors, borderWidth: 0 }]
     },
     options: {
-      ...CHART_DEFAULTS,
+      responsive: true, maintainAspectRatio: false,
       cutout: '60%',
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#e8eaf6', font: { family: 'Inter', size: 12 }, padding: 16 } },
+        legend: { position: 'bottom', labels: { color: c.text, font: { family: 'Inter', size: 12 }, padding: 16 } },
         tooltip: { callbacks: { label: ctx => ` R$ ${Number(ctx.raw).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` } }
       }
     }
