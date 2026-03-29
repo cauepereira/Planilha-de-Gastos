@@ -1,68 +1,135 @@
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+const SUPABASE_URL = "https://xxzghlxmduwopdjkixtg.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4emdobHhtZHV3b3BkamtpeHRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDM4ODMsImV4cCI6MjA5MDM3OTg4M30.32O8opEZHlvOHKf0vIaZPyQ5mz7bVtx0fMolLJzlnX4";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const MONTHS = [
   'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
 ];
 
 const CAT_COLORS = {
-  'Salário':      '#00c896',
-  'Freelance':    '#7c6af7',
-  'Investimento': '#4a90e2',
-  'Alimentação':  '#ff9f43',
-  'Transporte':   '#54a0ff',
-  'Moradia':      '#ff6b81',
-  'Saúde':        '#1dd1a1',
-  'Lazer':        '#feca57',
-  'Educação':     '#48dbfb',
-  'Roupas':       '#ff9ff3',
-  'Outros':       '#7b82a8',
+  'Salário':'#00c896','Freelance':'#7c6af7','Investimento':'#4a90e2',
+  'Alimentação':'#ff9f43','Transporte':'#54a0ff','Moradia':'#ff6b81',
+  'Saúde':'#1dd1a1','Lazer':'#feca57','Educação':'#48dbfb',
+  'Roupas':'#ff9ff3','Outros':'#7b82a8',
 };
 
 let currentDate = new Date();
 let currentYear = currentDate.getFullYear();
 let currentMonth = currentDate.getMonth();
 let activeFilter = 'todos';
-
-// ---- Storage ----
-function getKey(y, m) {
-  return `gastos_${y}_${m}`;
-}
-
-function loadItems(y = currentYear, m = currentMonth) {
-  const data = localStorage.getItem(getKey(y, m));
-  return data ? JSON.parse(data) : [];
-}
-
-function saveItems(items) {
-  localStorage.setItem(getKey(currentYear, currentMonth), JSON.stringify(items));
-}
+let currentUser = null;
+let cachedItems = [];
+let editingId = null;
 
 // ---- Formatters ----
-function fmt(value) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+function fmt(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function fmtDate(d) { if (!d) return ''; const [y,m,dd] = d.split('-'); return `${dd}/${m}/${y}`; }
+
+// ---- Auth ----
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.href }
+  });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  location.reload();
+});
+
+supabase.auth.onAuthStateChange((_event, session) => {
+  if (session?.user) {
+    currentUser = session.user;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appRoot').style.display = 'flex';
+    document.getElementById('userAvatar').src = currentUser.user_metadata?.avatar_url || '';
+    document.getElementById('userName').textContent = currentUser.user_metadata?.full_name?.split(' ')[0] || '';
+    document.getElementById('data').valueAsDate = new Date();
+    loadItems();
+  } else {
+    currentUser = null;
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appRoot').style.display = 'none';
+  }
+});
+
+// Verifica sessão ao carregar
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session?.user) {
+    currentUser = session.user;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appRoot').style.display = 'flex';
+    document.getElementById('userAvatar').src = currentUser.user_metadata?.avatar_url || '';
+    document.getElementById('userName').textContent = currentUser.user_metadata?.full_name?.split(' ')[0] || '';
+    document.getElementById('data').valueAsDate = new Date();
+    loadItems();
+  }
+});
+
+// ---- Supabase CRUD ----
+async function loadItems() {
+  setSyncStatus('syncing');
+  const { data, error } = await supabase
+    .from('items')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .eq('year', currentYear)
+    .eq('month', currentMonth)
+    .order('created_at', { ascending: false });
+
+  if (error) { setSyncStatus('error'); return; }
+  cachedItems = data || [];
+  setSyncStatus('ok');
+  render();
 }
 
-function fmtDate(dateStr) {
-  if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-');
-  return `${d}/${m}/${y}`;
+async function addItem(item) {
+  setSyncStatus('syncing');
+  const { error } = await supabase.from('items').insert({
+    ...item,
+    user_id: currentUser.id,
+    year: currentYear,
+    month: currentMonth
+  });
+  if (error) { setSyncStatus('error'); alert('Erro ao salvar.'); return; }
+  await loadItems();
+}
+
+async function removeItem(id) {
+  setSyncStatus('syncing');
+  await supabase.from('items').delete().eq('id', id).eq('user_id', currentUser.id);
+  await loadItems();
+}
+
+async function editItem(id, data) {
+  setSyncStatus('syncing');
+  await supabase.from('items').update(data).eq('id', id).eq('user_id', currentUser.id);
+  await loadItems();
+}
+
+function setSyncStatus(state) {
+  const el = document.getElementById('syncStatus');
+  if (state === 'syncing') { el.textContent = '⟳ Sincronizando...'; el.className = 'sync-status syncing'; }
+  else if (state === 'ok')  { el.textContent = '✓ Sincronizado';     el.className = 'sync-status ok'; }
+  else                      { el.textContent = '✗ Erro de conexão';  el.className = 'sync-status error'; }
 }
 
 // ---- Render ----
 function render() {
-  const items = loadItems();
+  if (!currentUser) return;
+  const items = cachedItems;
 
-  // Header
-  document.getElementById('currentMonthLabel').textContent =
-    `${MONTHS[currentMonth].slice(0,3)} ${currentYear}`;
+  document.getElementById('currentMonthLabel').textContent = `${MONTHS[currentMonth].slice(0,3)} ${currentYear}`;
   document.getElementById('headerMonth').textContent = MONTHS[currentMonth];
   document.getElementById('headerYear').textContent = currentYear;
 
-  // Totals
   let totalReceita = 0, totalDespesa = 0;
-  items.forEach(i => {
-    if (i.tipo === 'receita') totalReceita += i.valor;
-    else totalDespesa += i.valor;
-  });
+  items.forEach(i => { if (i.tipo === 'receita') totalReceita += Number(i.valor); else totalDespesa += Number(i.valor); });
   const saldo = totalReceita - totalDespesa;
 
   document.getElementById('totalReceita').textContent = fmt(totalReceita);
@@ -73,7 +140,6 @@ function render() {
   saldoEl.textContent = fmt(saldo);
   saldoEl.style.color = saldo < 0 ? 'var(--despesa)' : saldo === 0 ? 'var(--text-muted)' : 'var(--saldo)';
 
-  // Progress bar
   const total = totalReceita + totalDespesa;
   const pctR = total > 0 ? (totalReceita / total) * 100 : 0;
   const pctD = total > 0 ? (totalDespesa / total) * 100 : 0;
@@ -82,144 +148,107 @@ function render() {
   document.getElementById('pctReceita').textContent = pctR.toFixed(0) + '%';
   document.getElementById('pctDespesa').textContent = pctD.toFixed(0) + '%';
 
-  // Categorias (apenas despesas)
   renderCategorias(items);
-
-  // Lista
   renderLista(items);
 }
 
 function renderCategorias(items) {
-  const despesas = items.filter(i => i.tipo === 'despesa');
   const catMap = {};
-  despesas.forEach(i => {
+  items.filter(i => i.tipo === 'despesa').forEach(i => {
     const cat = i.categoria || 'Outros';
-    catMap[cat] = (catMap[cat] || 0) + i.valor;
+    catMap[cat] = (catMap[cat] || 0) + Number(i.valor);
   });
-
   const sorted = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
   const maxVal = sorted.length > 0 ? sorted[0][1] : 1;
-
   const catList = document.getElementById('catList');
   if (sorted.length === 0) {
     catList.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Nenhuma despesa registrada.</p>';
     return;
   }
-
-  catList.innerHTML = sorted.map(([cat, val]) => {
-    const pct = (val / maxVal) * 100;
-    const color = CAT_COLORS[cat] || '#7b82a8';
-    return `
-      <div class="cat-item">
-        <span class="cat-label">${cat}</span>
-        <div class="cat-bar-wrap">
-          <div class="cat-bar" style="width:${pct}%;background:${color}"></div>
-        </div>
-        <span class="cat-value">${fmt(val)}</span>
+  catList.innerHTML = sorted.map(([cat, val]) => `
+    <div class="cat-item">
+      <span class="cat-label">${cat}</span>
+      <div class="cat-bar-wrap">
+        <div class="cat-bar" style="width:${(val/maxVal)*100}%;background:${CAT_COLORS[cat]||'#7b82a8'}"></div>
       </div>
-    `;
-  }).join('');
+      <span class="cat-value">${fmt(val)}</span>
+    </div>
+  `).join('');
 }
 
 function renderLista(items) {
   const lista = document.getElementById('listaItens');
   const emptyMsg = document.getElementById('emptyMsg');
+  const filtered = activeFilter === 'todos' ? items : items.filter(i => i.tipo === activeFilter);
 
-  const filtered = activeFilter === 'todos'
-    ? items
-    : items.filter(i => i.tipo === activeFilter);
-
-  if (filtered.length === 0) {
-    lista.innerHTML = '';
-    emptyMsg.style.display = 'block';
-    return;
-  }
-
+  if (filtered.length === 0) { lista.innerHTML = ''; emptyMsg.style.display = 'block'; return; }
   emptyMsg.style.display = 'none';
 
-  // Ordenar por data (mais recente primeiro)
   const sorted = [...filtered].sort((a, b) => {
     if (!a.data && !b.data) return 0;
-    if (!a.data) return 1;
-    if (!b.data) return -1;
+    if (!a.data) return 1; if (!b.data) return -1;
     return b.data.localeCompare(a.data);
   });
 
-  lista.innerHTML = sorted.map((item) => {
-    const originalIndex = items.indexOf(item);
-    return `
-      <li>
-        <div class="item-dot ${item.tipo}"></div>
-        <div class="item-info">
-          <div class="item-desc">${item.descricao}</div>
-          <div class="item-meta">${item.categoria || 'Outros'}${item.data ? ' · ' + fmtDate(item.data) : ''}</div>
-        </div>
-        <span class="item-valor ${item.tipo}">${item.tipo === 'receita' ? '+' : '-'} ${fmt(item.valor)}</span>
-        <button class="btn-edit" data-index="${originalIndex}" title="Editar">✏️</button>
-        <button class="btn-remove" data-index="${originalIndex}" title="Remover">✕</button>
-      </li>
-    `;
-  }).join('');
+  lista.innerHTML = sorted.map(item => `
+    <li>
+      <div class="item-dot ${item.tipo}"></div>
+      <div class="item-info">
+        <div class="item-desc">${item.descricao}</div>
+        <div class="item-meta">${item.categoria || 'Outros'}${item.data ? ' · ' + fmtDate(item.data) : ''}</div>
+      </div>
+      <span class="item-valor ${item.tipo}">${item.tipo === 'receita' ? '+' : '-'} ${fmt(Number(item.valor))}</span>
+      <button class="btn-edit" data-id="${item.id}" title="Editar">✏️</button>
+      <button class="btn-remove" data-id="${item.id}" title="Remover">✕</button>
+    </li>
+  `).join('');
 }
 
-function renderHistorico() {
+// ---- Histórico ----
+async function renderHistorico() {
   const container = document.getElementById('historicoList');
-  const entries = [];
+  container.innerHTML = '<p class="empty-msg">Carregando...</p>';
 
-  // Varrer últimos 24 meses
-  for (let i = 0; i < 24; i++) {
-    let m = currentMonth - i;
-    let y = currentYear;
-    while (m < 0) { m += 12; y--; }
-    const items = loadItems(y, m);
-    if (items.length === 0) continue;
+  const { data, error } = await supabase
+    .from('items')
+    .select('tipo, valor, year, month')
+    .eq('user_id', currentUser.id);
 
-    let rec = 0, desp = 0;
-    items.forEach(it => {
-      if (it.tipo === 'receita') rec += it.valor;
-      else desp += it.valor;
-    });
-    const saldo = rec - desp;
+  if (error || !data) { container.innerHTML = '<p class="empty-msg">Erro ao carregar.</p>'; return; }
 
-    entries.push({ y, m, rec, desp, saldo, count: items.length });
-  }
+  const monthMap = {};
+  data.forEach(item => {
+    const key = `${item.year}_${item.month}`;
+    if (!monthMap[key]) monthMap[key] = { y: item.year, m: item.month, rec: 0, desp: 0, count: 0 };
+    if (item.tipo === 'receita') monthMap[key].rec += Number(item.valor);
+    else monthMap[key].desp += Number(item.valor);
+    monthMap[key].count++;
+  });
 
-  if (entries.length === 0) {
-    container.innerHTML = '<p class="empty-msg">Nenhum histórico encontrado.</p>';
-    return;
-  }
+  const entries = Object.values(monthMap).sort((a, b) => b.y !== a.y ? b.y - a.y : b.m - a.m);
+  if (entries.length === 0) { container.innerHTML = '<p class="empty-msg">Nenhum histórico encontrado.</p>'; return; }
 
-  container.innerHTML = entries.map(e => `
-    <div class="hist-item" data-year="${e.y}" data-month="${e.m}">
-      <span class="hist-month">${MONTHS[e.m]} ${e.y}</span>
-      <div class="hist-values">
-        <div class="hist-val">
-          <span>Receitas</span>
-          <strong style="color:var(--receita)">${fmt(e.rec)}</strong>
-        </div>
-        <div class="hist-val">
-          <span>Despesas</span>
-          <strong style="color:var(--despesa)">${fmt(e.desp)}</strong>
-        </div>
-        <div class="hist-val">
-          <span>Saldo</span>
-          <strong class="${e.saldo >= 0 ? 'hist-saldo-pos' : 'hist-saldo-neg'}">${fmt(e.saldo)}</strong>
-        </div>
-        <div class="hist-val">
-          <span>Itens</span>
-          <strong>${e.count}</strong>
+  container.innerHTML = entries.map(e => {
+    const saldo = e.rec - e.desp;
+    return `
+      <div class="hist-item" data-year="${e.y}" data-month="${e.m}">
+        <span class="hist-month">${MONTHS[e.m]} ${e.y}</span>
+        <div class="hist-values">
+          <div class="hist-val"><span>Receitas</span><strong style="color:var(--receita)">${fmt(e.rec)}</strong></div>
+          <div class="hist-val"><span>Despesas</span><strong style="color:var(--despesa)">${fmt(e.desp)}</strong></div>
+          <div class="hist-val"><span>Saldo</span><strong class="${saldo>=0?'hist-saldo-pos':'hist-saldo-neg'}">${fmt(saldo)}</strong></div>
+          <div class="hist-val"><span>Itens</span><strong>${e.count}</strong></div>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 
-  // Clicar no mês do histórico navega para ele
   container.querySelectorAll('.hist-item').forEach(el => {
     el.addEventListener('click', () => {
       currentYear = parseInt(el.dataset.year);
       currentMonth = parseInt(el.dataset.month);
       switchView('dashboard');
-      render();
+      loadItems();
     });
   });
 }
@@ -230,57 +259,38 @@ function switchView(name) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`view-${name}`).classList.add('active');
   document.querySelector(`[data-view="${name}"]`).classList.add('active');
-
   if (name === 'historico') renderHistorico();
 }
 
 // ---- Events ----
-document.getElementById('addBtn').addEventListener('click', () => {
+document.getElementById('addBtn').addEventListener('click', async () => {
   const descricao = document.getElementById('descricao').value.trim();
   const valor = parseFloat(document.getElementById('valor').value);
   const tipo = document.getElementById('tipo').value;
   const categoria = document.getElementById('categoria').value;
   const data = document.getElementById('data').value;
 
-  if (!descricao || isNaN(valor) || valor <= 0) {
-    alert('Preencha a descrição e um valor válido.');
-    return;
-  }
+  if (!descricao || isNaN(valor) || valor <= 0) { alert('Preencha a descrição e um valor válido.'); return; }
 
-  const items = loadItems();
-  items.push({ descricao, valor, tipo, categoria, data });
-  saveItems(items);
-
+  await addItem({ descricao, valor, tipo, categoria, data });
   document.getElementById('descricao').value = '';
   document.getElementById('valor').value = '';
-  document.getElementById('data').value = '';
-
-  render();
+  document.getElementById('data').valueAsDate = new Date();
 });
 
 document.getElementById('listaItens').addEventListener('click', (e) => {
-  if (e.target.classList.contains('btn-remove')) {
-    const index = parseInt(e.target.dataset.index);
-    const items = loadItems();
-    items.splice(index, 1);
-    saveItems(items);
-    render();
-  }
-  if (e.target.classList.contains('btn-edit')) {
-    openEditModal(parseInt(e.target.dataset.index));
-  }
+  if (e.target.classList.contains('btn-remove')) removeItem(e.target.dataset.id);
+  if (e.target.classList.contains('btn-edit')) openEditModal(e.target.dataset.id);
 });
 
 document.getElementById('prevMonth').addEventListener('click', () => {
-  currentMonth--;
-  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-  render();
+  currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  loadItems();
 });
 
 document.getElementById('nextMonth').addEventListener('click', () => {
-  currentMonth++;
-  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-  render();
+  currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  loadItems();
 });
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -296,54 +306,38 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-// Set today's date as default
-document.getElementById('data').valueAsDate = new Date();
-
 // ---- Modal de Edição ----
-let editingIndex = null;
-
-function openEditModal(index) {
-  const items = loadItems();
-  const item = items[index];
-  editingIndex = index;
-
+function openEditModal(id) {
+  const item = cachedItems.find(i => i.id === id);
+  if (!item) return;
+  editingId = id;
   document.getElementById('editDescricao').value = item.descricao;
   document.getElementById('editValor').value = item.valor;
   document.getElementById('editTipo').value = item.tipo;
   document.getElementById('editCategoria').value = item.categoria || 'Outros';
   document.getElementById('editData').value = item.data || '';
-
   document.getElementById('editModal').style.display = 'flex';
 }
 
 function closeEditModal() {
   document.getElementById('editModal').style.display = 'none';
-  editingIndex = null;
+  editingId = null;
 }
 
 document.getElementById('closeModal').addEventListener('click', closeEditModal);
-
-document.getElementById('editModal').addEventListener('click', (e) => {
+document.getElementById('editModal').addEventListener('click', e => {
   if (e.target === document.getElementById('editModal')) closeEditModal();
 });
 
-document.getElementById('saveEditBtn').addEventListener('click', () => {
+document.getElementById('saveEditBtn').addEventListener('click', async () => {
   const descricao = document.getElementById('editDescricao').value.trim();
   const valor = parseFloat(document.getElementById('editValor').value);
   const tipo = document.getElementById('editTipo').value;
   const categoria = document.getElementById('editCategoria').value;
   const data = document.getElementById('editData').value;
 
-  if (!descricao || isNaN(valor) || valor <= 0) {
-    alert('Preencha a descrição e um valor válido.');
-    return;
-  }
+  if (!descricao || isNaN(valor) || valor <= 0) { alert('Preencha a descrição e um valor válido.'); return; }
 
-  const items = loadItems();
-  items[editingIndex] = { descricao, valor, tipo, categoria, data };
-  saveItems(items);
+  await editItem(editingId, { descricao, valor, tipo, categoria, data });
   closeEditModal();
-  render();
 });
-
-render();

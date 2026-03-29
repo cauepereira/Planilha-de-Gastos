@@ -9,7 +9,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="app">
+
+  <!-- Tela de Login -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <div class="login-logo">💸 Planilha de Gastos</div>
+      <p>Faça login para sincronizar seus dados em todos os dispositivos.</p>
+      <button id="loginBtn" class="login-google-btn">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" />
+        Entrar com Google
+      </button>
+    </div>
+  </div>
+
+  <div id="appRoot" class="app" style="display:none">
 
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -23,6 +36,11 @@
         <span id="currentMonthLabel"></span>
         <button id="nextMonth">&#8594;</button>
       </div>
+      <div class="sidebar-user">
+        <img id="userAvatar" src="" alt="" width="28" height="28" />
+        <span id="userName"></span>
+        <button id="logoutBtn" title="Sair">⏏</button>
+      </div>
     </aside>
 
     <!-- Main -->
@@ -34,6 +52,7 @@
         <div class="page-header">
           <h2 id="headerMonth"></h2>
           <span id="headerYear" class="year-badge"></span>
+          <div id="syncStatus" class="sync-status">✓ Sincronizado</div>
         </div>
 
         <!-- Cards -->
@@ -178,6 +197,7 @@
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <!-- Firebase SDK -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>
