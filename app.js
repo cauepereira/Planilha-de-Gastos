@@ -322,7 +322,7 @@ async function renderHistorico() {
 
   const { data, error } = await supabase
     .from('items')
-    .select('tipo, valor, year, month')
+    .select('tipo, valor, year, month, descricao, categoria, data')
     .eq('user_id', currentUser.id);
 
   if (error || !data) { container.innerHTML = '<p class="empty-msg">Erro ao carregar.</p>'; return; }
@@ -350,18 +350,121 @@ async function renderHistorico() {
           <div class="hist-val"><span>Saldo</span><strong class="${saldo>=0?'hist-saldo-pos':'hist-saldo-neg'}">${fmt(saldo)}</strong></div>
           <div class="hist-val"><span>Itens</span><strong>${e.count}</strong></div>
         </div>
+        <button class="btn-pdf" data-year="${e.y}" data-month="${e.m}" title="Exportar PDF">📄 PDF</button>
       </div>
     `;
   }).join('');
 
   container.querySelectorAll('.hist-item').forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (e) => {
+      if (e.target.classList.contains('btn-pdf')) return;
       currentYear = parseInt(el.dataset.year);
       currentMonth = parseInt(el.dataset.month);
       switchView('dashboard');
       loadItems();
     });
   });
+
+  container.querySelectorAll('.btn-pdf').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const y = parseInt(btn.dataset.year);
+      const m = parseInt(btn.dataset.month);
+      exportPDF(y, m, data.filter(d => d.year === y && d.month === m));
+    });
+  });
+}
+
+// ---- Exportar PDF ----
+function exportPDF(year, month, items) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const pageW = doc.internal.pageSize.getWidth();
+  let y = 20;
+
+  const addLine = (text, x, yPos, size = 10, style = 'normal', color = [30, 30, 30]) => {
+    doc.setFontSize(size);
+    doc.setFont('helvetica', style);
+    doc.setTextColor(...color);
+    doc.text(text, x, yPos);
+  };
+
+  // Cabeçalho
+  doc.setFillColor(124, 106, 247);
+  doc.rect(0, 0, pageW, 30, 'F');
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(255, 255, 255);
+  doc.text(`Planilha de Gastos — ${MONTHS[month]} ${year}`, 14, 19);
+  y = 44;
+
+  // Totais
+  const receitas = items.filter(i => i.tipo === 'receita');
+  const despesas = items.filter(i => i.tipo === 'despesa');
+  const totalRec = receitas.reduce((s, i) => s + Number(i.valor), 0);
+  const totalDesp = despesas.reduce((s, i) => s + Number(i.valor), 0);
+  const saldo = totalRec - totalDesp;
+
+  doc.setFillColor(245, 245, 250);
+  doc.roundedRect(14, y - 6, pageW - 28, 22, 3, 3, 'F');
+  addLine(`Receitas: ${fmt(totalRec)}`, 18, y + 2, 10, 'bold', [0, 150, 100]);
+  addLine(`Despesas: ${fmt(totalDesp)}`, 80, y + 2, 10, 'bold', [220, 50, 80]);
+  addLine(`Saldo: ${fmt(saldo)}`, 150, y + 2, 10, 'bold', saldo >= 0 ? [0, 120, 80] : [200, 40, 60]);
+  y += 26;
+
+  const renderSection = (title, list, color) => {
+    if (list.length === 0) return;
+
+    // Título da seção
+    doc.setFillColor(...color);
+    doc.rect(14, y, 4, list.length * 10 + 14, 'F');
+    addLine(title, 22, y + 8, 11, 'bold', [40, 40, 40]);
+    y += 14;
+
+    // Cabeçalho da tabela
+    doc.setFillColor(230, 230, 240);
+    doc.rect(14, y - 5, pageW - 28, 8, 'F');
+    addLine('Descrição', 18, y, 9, 'bold', [80, 80, 80]);
+    addLine('Categoria', 90, y, 9, 'bold', [80, 80, 80]);
+    addLine('Data', 140, y, 9, 'bold', [80, 80, 80]);
+    addLine('Valor', 170, y, 9, 'bold', [80, 80, 80]);
+    y += 8;
+
+    list.forEach((item, idx) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      if (idx % 2 === 0) {
+        doc.setFillColor(248, 248, 252);
+        doc.rect(14, y - 4, pageW - 28, 8, 'F');
+      }
+      const desc = item.descricao.length > 30 ? item.descricao.slice(0, 28) + '...' : item.descricao;
+      addLine(desc, 18, y, 9, 'normal', [40, 40, 40]);
+      addLine(item.categoria || 'Outros', 90, y, 9, 'normal', [80, 80, 80]);
+      addLine(item.data ? fmtDate(item.data) : '—', 140, y, 9, 'normal', [80, 80, 80]);
+      addLine(fmt(Number(item.valor)), 165, y, 9, 'bold', color);
+      y += 9;
+    });
+
+    // Total da seção
+    const total = list.reduce((s, i) => s + Number(i.valor), 0);
+    doc.setFillColor(240, 240, 248);
+    doc.rect(14, y - 2, pageW - 28, 8, 'F');
+    addLine(`Total ${title}: ${fmt(total)}`, 18, y + 4, 9, 'bold', color);
+    y += 16;
+  };
+
+  renderSection('Receitas', receitas, [0, 150, 100]);
+  renderSection('Despesas', despesas, [200, 50, 70]);
+
+  // Rodapé
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} — Página ${i} de ${pageCount}`, 14, 290);
+  }
+
+  doc.save(`gastos-${MONTHS[month].toLowerCase()}-${year}.pdf`);
 }
 
 // ---- Views ----
