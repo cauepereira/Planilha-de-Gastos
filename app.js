@@ -43,11 +43,14 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   location.reload();
 });
 
+let appInitialized = false;
+
 supabase.auth.onAuthStateChange((_event, session) => {
   if (session?.user) {
     if (window.location.hash) history.replaceState(null, '', window.location.pathname);
-    initApp(session.user);
+    if (!appInitialized) initApp(session.user);
   } else {
+    appInitialized = false;
     currentUser = null;
     cachedItems = [];
     document.getElementById('loginScreen').style.display = 'flex';
@@ -58,18 +61,19 @@ supabase.auth.onAuthStateChange((_event, session) => {
 supabase.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) {
     if (window.location.hash) history.replaceState(null, '', window.location.pathname);
-    initApp(session.user);
+    if (!appInitialized) initApp(session.user);
   }
 });
 
 function initApp(user) {
+  appInitialized = true;
   currentUser = user;
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appRoot').style.display = 'flex';
   document.getElementById('userAvatar').src = user.user_metadata?.avatar_url || '';
   document.getElementById('userName').textContent = user.user_metadata?.full_name?.split(' ')[0] || '';
   document.getElementById('data').valueAsDate = new Date();
-  subscribeToMonth();
+  loadItems();
 }
 
 // ---- Supabase CRUD ----
