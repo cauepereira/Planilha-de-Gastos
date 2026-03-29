@@ -3,7 +3,13 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = "https://xxzghlxmduwopdjkixtg.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4emdobHhtZHV3b3BkamtpeHRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDM4ODMsImV4cCI6MjA5MDM3OTg4M30.32O8opEZHlvOHKf0vIaZPyQ5mz7bVtx0fMolLJzlnX4";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    detectSessionInUrl: true,
+    persistSession: true,
+    autoRefreshToken: true,
+  }
+});
 
 const MONTHS = [
   'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
@@ -45,19 +51,14 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
 // Verifica sessão ao carregar — também trata o retorno do OAuth via hash na URL
 supabase.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) {
+    history.replaceState(null, '', window.location.pathname);
     initApp(session.user);
-  } else {
-    // Tenta pegar sessão do hash da URL (retorno do OAuth)
-    supabase.auth.exchangeCodeForSession(window.location.hash).catch(() => {});
   }
 });
 
 supabase.auth.onAuthStateChange((_event, session) => {
   if (session?.user) {
-    // Limpa o hash da URL sem recarregar
-    if (window.location.hash) {
-      history.replaceState(null, '', window.location.pathname);
-    }
+    history.replaceState(null, '', window.location.pathname);
     initApp(session.user);
   } else {
     currentUser = null;
