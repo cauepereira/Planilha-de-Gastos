@@ -42,34 +42,40 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   location.reload();
 });
 
+// Verifica sessão ao carregar — também trata o retorno do OAuth via hash na URL
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session?.user) {
+    initApp(session.user);
+  } else {
+    // Tenta pegar sessão do hash da URL (retorno do OAuth)
+    supabase.auth.exchangeCodeForSession(window.location.hash).catch(() => {});
+  }
+});
+
 supabase.auth.onAuthStateChange((_event, session) => {
   if (session?.user) {
-    currentUser = session.user;
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appRoot').style.display = 'flex';
-    document.getElementById('userAvatar').src = currentUser.user_metadata?.avatar_url || '';
-    document.getElementById('userName').textContent = currentUser.user_metadata?.full_name?.split(' ')[0] || '';
-    document.getElementById('data').valueAsDate = new Date();
-    loadItems();
+    // Limpa o hash da URL sem recarregar
+    if (window.location.hash) {
+      history.replaceState(null, '', window.location.pathname);
+    }
+    initApp(session.user);
   } else {
     currentUser = null;
+    cachedItems = [];
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('appRoot').style.display = 'none';
   }
 });
 
-// Verifica sessão ao carregar
-supabase.auth.getSession().then(({ data: { session } }) => {
-  if (session?.user) {
-    currentUser = session.user;
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appRoot').style.display = 'flex';
-    document.getElementById('userAvatar').src = currentUser.user_metadata?.avatar_url || '';
-    document.getElementById('userName').textContent = currentUser.user_metadata?.full_name?.split(' ')[0] || '';
-    document.getElementById('data').valueAsDate = new Date();
-    loadItems();
-  }
-});
+function initApp(user) {
+  currentUser = user;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appRoot').style.display = 'flex';
+  document.getElementById('userAvatar').src = user.user_metadata?.avatar_url || '';
+  document.getElementById('userName').textContent = user.user_metadata?.full_name?.split(' ')[0] || '';
+  document.getElementById('data').valueAsDate = new Date();
+  subscribeToMonth();
+}
 
 // ---- Supabase CRUD ----
 async function loadItems() {
