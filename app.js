@@ -33,37 +33,32 @@ function fmtDate(d) { if (!d) return ''; const [y,m,dd] = d.split('-'); return `
 document.getElementById('loginBtn').addEventListener('click', async () => {
   await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.href }
+    options: { redirectTo: window.location.origin }
   });
 });
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await supabase.auth.signOut();
+  history.replaceState(null, '', window.location.pathname);
   location.reload();
-});
-
-// Verifica sessão ao carregar — também trata o retorno do OAuth via hash na URL
-supabase.auth.getSession().then(({ data: { session } }) => {
-  if (session?.user) {
-    initApp(session.user);
-  } else {
-    // Tenta pegar sessão do hash da URL (retorno do OAuth)
-    supabase.auth.exchangeCodeForSession(window.location.hash).catch(() => {});
-  }
 });
 
 supabase.auth.onAuthStateChange((_event, session) => {
   if (session?.user) {
-    // Limpa o hash da URL sem recarregar
-    if (window.location.hash) {
-      history.replaceState(null, '', window.location.pathname);
-    }
+    if (window.location.hash) history.replaceState(null, '', window.location.pathname);
     initApp(session.user);
   } else {
     currentUser = null;
     cachedItems = [];
     document.getElementById('loginScreen').style.display = 'flex';
     document.getElementById('appRoot').style.display = 'none';
+  }
+});
+
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session?.user) {
+    if (window.location.hash) history.replaceState(null, '', window.location.pathname);
+    initApp(session.user);
   }
 });
 
