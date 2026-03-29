@@ -508,6 +508,32 @@ document.getElementById('nextMonth').addEventListener('click', () => {
   loadItems();
 });
 
+// ---- Tema ----
+const themeBtn = document.getElementById('themeBtn');
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.body.classList.add('light');
+    themeBtn.textContent = '☀️';
+  } else {
+    document.body.classList.remove('light');
+    themeBtn.textContent = '🌙';
+  }
+  localStorage.setItem('theme', theme);
+}
+
+// Carrega tema salvo
+applyTheme(localStorage.getItem('theme') || 'dark');
+
+themeBtn.addEventListener('click', () => {
+  const isLight = document.body.classList.contains('light');
+  applyTheme(isLight ? 'dark' : 'light');
+  // Atualiza gráficos se estiver na view de gráficos
+  if (document.getElementById('view-graficos').classList.contains('active')) {
+    renderGraficos();
+  }
+});
+
 // ---- Hamburguer menu ----
 const hamburgerBtn = document.getElementById('hamburgerBtn');
 const sidebar = document.getElementById('sidebar');

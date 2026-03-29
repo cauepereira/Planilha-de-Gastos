@@ -14,6 +14,19 @@
   --radius: 14px;
 }
 
+body.light {
+  --bg: #f0f2f8;
+  --surface: #ffffff;
+  --surface2: #e8eaf6;
+  --border: #d0d4e8;
+  --text: #1a1d27;
+  --text-muted: #6b7280;
+  --receita: #059669;
+  --despesa: #e11d48;
+  --saldo: #2563eb;
+  --accent: #7c6af7;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background: var(--bg);
@@ -193,6 +206,18 @@ body {
   white-space: nowrap;
 }
 
+#themeBtn {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: opacity 0.2s;
+}
+
+#themeBtn:hover { opacity: 0.7; }
+
 #logoutBtn {
   background: none;
   border: none;
@@ -217,6 +242,15 @@ body {
 .sync-status.ok      { background: rgba(0,200,150,0.15); color: var(--receita); }
 .sync-status.syncing { background: rgba(122,106,247,0.15); color: var(--accent); }
 .sync-status.error   { background: rgba(255,92,124,0.15); color: var(--despesa); }
+
+/* Tema claro — ajustes específicos */
+body.light .login-right { background: #ffffff; }
+body.light .form-grid input,
+body.light .form-grid select { background: #f0f2f8; color: #1a1d27; }
+body.light #listaItens li { background: #f0f2f8; }
+body.light #listaItens li:hover { background: #e2e5f5; }
+body.light .modal { background: #ffffff; }
+body.light .hist-item:hover { background: #e8eaf6; }
 
 /* Hamburguer */
 .hamburger {
