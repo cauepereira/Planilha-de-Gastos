@@ -104,6 +104,8 @@ const TIPO_LABELS = {
   outro: '📝 Outro'
 };
 
+let currentFeedbackId = null;
+
 document.getElementById('sendFeedbackBtn').addEventListener('click', async () => {
   const tipo = document.getElementById('feedbackTipo').value;
   const mensagem = document.getElementById('feedbackMsg').value.trim();
@@ -151,14 +153,21 @@ async function renderFeedback() {
         <span class="feedback-date">${new Date(f.created_at).toLocaleDateString('pt-BR')}</span>
       </div>
       <p class="feedback-msg">${f.mensagem}</p>
-      ${f.resolvido
-        ? `<span class="feedback-resolved-badge">✓ Resolvido</span>`
-        : isAdmin
-          ? `<button class="btn-resolve" data-id="${f.id}">✓ Marcar como resolvido</button>`
-          : ''
-      }
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+        <button class="btn-thread" data-id="${f.id}" data-msg="${f.mensagem.replace(/"/g,'&quot;')}" data-tipo="${TIPO_LABELS[f.tipo]||f.tipo}">💬 Ver conversa</button>
+        ${f.resolvido
+          ? `<span class="feedback-resolved-badge">✓ Resolvido</span>`
+          : isAdmin
+            ? `<button class="btn-resolve" data-id="${f.id}">✓ Marcar como resolvido</button>`
+            : ''
+        }
+      </div>
     </div>
   `).join('');
+
+  container.querySelectorAll('.btn-thread').forEach(btn => {
+    btn.addEventListener('click', () => openFeedbackModal(btn.dataset.id, btn.dataset.msg, btn.dataset.tipo));
+  });
 
   if (isAdmin) {
     container.querySelectorAll('.btn-resolve').forEach(btn => {
@@ -169,6 +178,66 @@ async function renderFeedback() {
     });
   }
 }
+
+async function openFeedbackModal(feedbackId, msgOriginal, tipo) {
+  currentFeedbackId = feedbackId;
+  document.getElementById('feedbackModalTipo').textContent = tipo;
+  document.getElementById('feedbackModalMsg').textContent = msgOriginal;
+  document.getElementById('feedbackReplyMsg').value = '';
+  document.getElementById('feedbackModal').style.display = 'flex';
+  await loadRespostas(feedbackId);
+}
+
+async function loadRespostas(feedbackId) {
+  const { data } = await supabase
+    .from('feedback_respostas')
+    .select('*')
+    .eq('feedback_id', feedbackId)
+    .order('created_at');
+
+  const container = document.getElementById('feedbackRespostas');
+  if (!data || data.length === 0) { container.innerHTML = ''; return; }
+
+  container.innerHTML = data.map(r => `
+    <div class="resposta-item ${r.is_admin ? 'admin' : 'user'}">
+      <div class="resposta-meta">
+        <span>${r.user_name || 'Usuário'}</span>
+        ${r.is_admin ? '<span class="resposta-admin-badge">Dev</span>' : ''}
+        <span>${new Date(r.created_at).toLocaleDateString('pt-BR')}</span>
+      </div>
+      <div>${r.mensagem}</div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('sendReplyBtn').addEventListener('click', async () => {
+  const mensagem = document.getElementById('feedbackReplyMsg').value.trim();
+  if (!mensagem || !currentFeedbackId) return;
+
+  const isAdmin = currentUser.id === ADMIN_ID;
+  await supabase.from('feedback_respostas').insert({
+    feedback_id: currentFeedbackId,
+    user_id: currentUser.id,
+    user_name: currentUser.user_metadata?.full_name || 'Usuário',
+    mensagem,
+    is_admin: isAdmin
+  });
+
+  document.getElementById('feedbackReplyMsg').value = '';
+  await loadRespostas(currentFeedbackId);
+});
+
+document.getElementById('closeFeedbackModal').addEventListener('click', () => {
+  document.getElementById('feedbackModal').style.display = 'none';
+  currentFeedbackId = null;
+});
+
+document.getElementById('feedbackModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('feedbackModal')) {
+    document.getElementById('feedbackModal').style.display = 'none';
+    currentFeedbackId = null;
+  }
+});
 
 // ---- Categorias ----
 async function loadCategorias() {
