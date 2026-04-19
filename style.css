@@ -852,6 +852,61 @@ body.light .hist-item:hover { background: #e8eaf6; }
 
 .btn-close:hover { color: var(--despesa); }
 
+.cat-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.cat-form input:first-child {
+  width: 70px;
+  flex: none;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.cat-form input:nth-child(2) { flex: 1; min-width: 140px; }
+
+.cat-form button {
+  background: linear-gradient(135deg, var(--accent), #5a4fcf);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  white-space: nowrap;
+}
+
+.cat-custom-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+}
+
+.cat-custom-item span { flex: 1; font-size: 0.9rem; }
+
+.cat-custom-item .btn-remove {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.cat-fixed-badge {
+  font-size: 0.72rem;
+  background: var(--surface);
+  color: var(--text-muted);
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+}
+
 /* Gráficos */
 .chart-grid {
   display: grid;

@@ -14,8 +14,26 @@ const CAT_COLORS = {
   'Salário':'#00c896','Freelance':'#7c6af7','Investimento':'#4a90e2',
   'Alimentação':'#ff9f43','Transporte':'#54a0ff','Moradia':'#ff6b81',
   'Saúde':'#1dd1a1','Lazer':'#feca57','Educação':'#48dbfb',
-  'Roupas':'#ff9ff3','Outros':'#7b82a8',
+  'Roupas':'#ff9ff3','Beleza':'#f368e0','Celular':'#00d2d3','Outros':'#7b82a8',
 };
+
+const CATS_FIXAS = [
+  { emoji: '💰', nome: 'Salário' },
+  { emoji: '💻', nome: 'Freelance' },
+  { emoji: '📈', nome: 'Investimento' },
+  { emoji: '🍔', nome: 'Alimentação' },
+  { emoji: '🚗', nome: 'Transporte' },
+  { emoji: '🏠', nome: 'Moradia' },
+  { emoji: '💊', nome: 'Saúde' },
+  { emoji: '🎮', nome: 'Lazer' },
+  { emoji: '📚', nome: 'Educação' },
+  { emoji: '👕', nome: 'Roupas' },
+  { emoji: '💄', nome: 'Beleza' },
+  { emoji: '📱', nome: 'Celular' },
+  { emoji: '📦', nome: 'Outros' },
+];
+
+let cachedCategorias = [];
 
 let currentDate = new Date();
 let currentYear = currentDate.getFullYear();
@@ -73,8 +91,72 @@ function initApp(user) {
   document.getElementById('userAvatar').src = user.user_metadata?.avatar_url || '';
   document.getElementById('userName').textContent = user.user_metadata?.full_name?.split(' ')[0] || '';
   document.getElementById('data').valueAsDate = new Date();
-  loadItems();
+  loadCategorias().then(() => loadItems());
 }
+
+// ---- Categorias ----
+async function loadCategorias() {
+  const { data } = await supabase
+    .from('categorias')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('created_at');
+  cachedCategorias = data || [];
+  populateCatSelects();
+}
+
+function allCats() {
+  return [
+    ...CATS_FIXAS,
+    ...cachedCategorias.map(c => ({ emoji: c.emoji, nome: c.nome, id: c.id }))
+  ];
+}
+
+function populateCatSelects() {
+  const cats = allCats();
+  const opts = cats.map(c => `<option value="${c.nome}">${c.emoji} ${c.nome}</option>`).join('');
+  document.getElementById('categoria').innerHTML = opts;
+  document.getElementById('editCategoria').innerHTML = opts;
+}
+
+async function addCategoria(emoji, nome) {
+  await supabase.from('categorias').insert({ emoji, nome, user_id: currentUser.id });
+  await loadCategorias();
+  renderCatView();
+}
+
+async function removeCategoria(id) {
+  await supabase.from('categorias').delete().eq('id', id).eq('user_id', currentUser.id);
+  await loadCategorias();
+  renderCatView();
+}
+
+function renderCatView() {
+  const container = document.getElementById('catCustomList');
+  const cats = allCats();
+  container.innerHTML = cats.map(c => `
+    <div class="cat-custom-item">
+      <span>${c.emoji} ${c.nome}</span>
+      ${c.id
+        ? `<button class="btn-remove" data-catid="${c.id}">✕</button>`
+        : `<span class="cat-fixed-badge">padrão</span>`
+      }
+    </div>
+  `).join('');
+
+  container.querySelectorAll('[data-catid]').forEach(btn => {
+    btn.addEventListener('click', () => removeCategoria(btn.dataset.catid));
+  });
+}
+
+document.getElementById('addCatBtn').addEventListener('click', async () => {
+  const emoji = document.getElementById('catEmoji').value.trim() || '📦';
+  const nome = document.getElementById('catNome').value.trim();
+  if (!nome) { alert('Digite o nome da categoria.'); return; }
+  await addCategoria(emoji, nome);
+  document.getElementById('catEmoji').value = '';
+  document.getElementById('catNome').value = '';
+});
 
 // ---- Supabase CRUD ----
 async function loadItems() {
@@ -489,6 +571,7 @@ function switchView(name) {
   document.querySelector(`[data-view="${name}"]`).classList.add('active');
   if (name === 'historico') renderHistorico();
   if (name === 'graficos') renderGraficos();
+  if (name === 'categorias') renderCatView();
 }
 
 // ---- Events ----

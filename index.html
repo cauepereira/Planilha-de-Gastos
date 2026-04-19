@@ -71,6 +71,7 @@
         <button class="nav-btn active" data-view="dashboard">📊 Dashboard</button>
         <button class="nav-btn" data-view="graficos">📈 Gráficos</button>
         <button class="nav-btn" data-view="historico">📅 Histórico</button>
+        <button class="nav-btn" data-view="categorias">🏷️ Categorias</button>
       </nav>
       <div class="sidebar-month">
         <button id="prevMonth">&#8592;</button>
@@ -161,19 +162,7 @@
               <option value="receita">⬆️ Receita</option>
               <option value="despesa">⬇️ Despesa</option>
             </select>
-            <select id="categoria">
-              <option value="Salário">💰 Salário</option>
-              <option value="Freelance">💻 Freelance</option>
-              <option value="Investimento">📈 Investimento</option>
-              <option value="Alimentação">🍔 Alimentação</option>
-              <option value="Transporte">🚗 Transporte</option>
-              <option value="Moradia">🏠 Moradia</option>
-              <option value="Saúde">💊 Saúde</option>
-              <option value="Lazer">🎮 Lazer</option>
-              <option value="Educação">📚 Educação</option>
-              <option value="Roupas">👕 Roupas</option>
-              <option value="Outros">📦 Outros</option>
-            </select>
+            <select id="categoria"></select>
             <input type="date" id="data" />
             <select id="pagamento">
               <option value="Dinheiro">💵 Dinheiro</option>
@@ -233,6 +222,25 @@
         <div id="historicoList" class="historico-list"></div>
       </div>
 
+      <!-- Categorias View -->
+      <div id="view-categorias" class="view">
+        <div class="page-header">
+          <h2>Categorias</h2>
+        </div>
+        <div class="form-card">
+          <h3>Nova Categoria</h3>
+          <div class="cat-form">
+            <input type="text" id="catEmoji" placeholder="Emoji" maxlength="2" />
+            <input type="text" id="catNome" placeholder="Nome da categoria" />
+            <button id="addCatBtn">+ Adicionar</button>
+          </div>
+        </div>
+        <div class="list-card">
+          <h3 style="font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px">Suas Categorias</h3>
+          <div id="catCustomList"></div>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -250,19 +258,7 @@
           <option value="receita">⬆️ Receita</option>
           <option value="despesa">⬇️ Despesa</option>
         </select>
-        <select id="editCategoria">
-          <option value="Salário">💰 Salário</option>
-          <option value="Freelance">💻 Freelance</option>
-          <option value="Investimento">📈 Investimento</option>
-          <option value="Alimentação">🍔 Alimentação</option>
-          <option value="Transporte">🚗 Transporte</option>
-          <option value="Moradia">🏠 Moradia</option>
-          <option value="Saúde">💊 Saúde</option>
-          <option value="Lazer">🎮 Lazer</option>
-          <option value="Educação">📚 Educação</option>
-          <option value="Roupas">👕 Roupas</option>
-          <option value="Outros">📦 Outros</option>
-        </select>
+        <select id="editCategoria"></select>
         <input type="date" id="editData" />
         <select id="editPagamento">
           <option value="Dinheiro">💵 Dinheiro</option>
