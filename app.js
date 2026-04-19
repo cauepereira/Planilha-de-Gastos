@@ -94,6 +94,82 @@ function initApp(user) {
   loadCategorias().then(() => loadItems());
 }
 
+// ---- Feedback ----
+const ADMIN_ID = 'e264a92c-25d8-49f2-bf04-955bc799a64c';
+
+const TIPO_LABELS = {
+  sugestao: '💡 Sugestão',
+  bug: '🐛 Bug',
+  elogio: '⭐ Elogio',
+  outro: '📝 Outro'
+};
+
+document.getElementById('sendFeedbackBtn').addEventListener('click', async () => {
+  const tipo = document.getElementById('feedbackTipo').value;
+  const mensagem = document.getElementById('feedbackMsg').value.trim();
+  if (!mensagem) { alert('Escreva uma mensagem antes de enviar.'); return; }
+
+  const { error } = await supabase.from('feedbacks').insert({
+    user_id: currentUser.id,
+    user_name: currentUser.user_metadata?.full_name || 'Usuário',
+    tipo,
+    mensagem
+  });
+
+  if (error) { alert('Erro ao enviar feedback.'); return; }
+  document.getElementById('feedbackMsg').value = '';
+  alert('Feedback enviado! Obrigado 🙏');
+  renderFeedback();
+});
+
+async function renderFeedback() {
+  const isAdmin = currentUser.id === ADMIN_ID;
+  const container = document.getElementById('feedbackList');
+  const emptyMsg = document.getElementById('feedbackEmpty');
+
+  if (isAdmin) document.getElementById('feedbackAdminBadge').style.display = 'inline';
+
+  container.innerHTML = '<p class="empty-msg">Carregando...</p>';
+
+  const { data, error } = await supabase
+    .from('feedbacks')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    container.innerHTML = '';
+    emptyMsg.style.display = 'block';
+    return;
+  }
+
+  emptyMsg.style.display = 'none';
+  container.innerHTML = data.map(f => `
+    <div class="feedback-item ${f.resolvido ? 'resolvido' : ''}" data-id="${f.id}">
+      <div class="feedback-item-header">
+        <span class="feedback-tipo">${TIPO_LABELS[f.tipo] || f.tipo}</span>
+        <span class="feedback-user">${f.user_name || 'Usuário'}</span>
+        <span class="feedback-date">${new Date(f.created_at).toLocaleDateString('pt-BR')}</span>
+      </div>
+      <p class="feedback-msg">${f.mensagem}</p>
+      ${f.resolvido
+        ? `<span class="feedback-resolved-badge">✓ Resolvido</span>`
+        : isAdmin
+          ? `<button class="btn-resolve" data-id="${f.id}">✓ Marcar como resolvido</button>`
+          : ''
+      }
+    </div>
+  `).join('');
+
+  if (isAdmin) {
+    container.querySelectorAll('.btn-resolve').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await supabase.from('feedbacks').update({ resolvido: true }).eq('id', btn.dataset.id);
+        renderFeedback();
+      });
+    });
+  }
+}
+
 // ---- Categorias ----
 async function loadCategorias() {
   const { data } = await supabase
@@ -581,6 +657,7 @@ function switchView(name) {
   if (name === 'historico') renderHistorico();
   if (name === 'graficos') renderGraficos();
   if (name === 'categorias') renderCatView();
+  if (name === 'feedback') renderFeedback();
 }
 
 // ---- Events ----

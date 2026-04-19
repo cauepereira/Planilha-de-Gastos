@@ -537,6 +537,119 @@ body.light .hist-item:hover { background: #e8eaf6; }
   margin-top: 6px;
 }
 
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feedback-form select,
+.feedback-form textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  resize: vertical;
+}
+
+.feedback-form select:focus,
+.feedback-form textarea:focus { border-color: var(--accent); }
+.feedback-form textarea::placeholder { color: var(--text-muted); }
+.feedback-form select option { background: var(--surface2); }
+
+.feedback-form button {
+  background: linear-gradient(135deg, var(--accent), #5a4fcf);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  align-self: flex-start;
+  transition: opacity 0.2s;
+}
+
+.feedback-form button:hover { opacity: 0.9; }
+
+.feedback-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.2s;
+}
+
+.feedback-item.resolvido {
+  border-color: var(--receita);
+  opacity: 0.7;
+}
+
+.feedback-item-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.feedback-tipo {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.feedback-user {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.feedback-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+.feedback-msg {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.feedback-resolved-badge {
+  font-size: 0.75rem;
+  color: var(--receita);
+  font-weight: 600;
+}
+
+.btn-resolve {
+  background: none;
+  border: 1px solid var(--receita);
+  color: var(--receita);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  align-self: flex-start;
+  transition: all 0.2s;
+}
+
+.btn-resolve:hover { background: var(--receita); color: white; }
+
 /* Categorias */
 .cat-section {
   background: var(--surface);

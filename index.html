@@ -72,6 +72,7 @@
         <button class="nav-btn" data-view="graficos">📈 Gráficos</button>
         <button class="nav-btn" data-view="historico">📅 Histórico</button>
         <button class="nav-btn" data-view="categorias">🏷️ Categorias</button>
+        <button class="nav-btn" data-view="feedback">💬 Feedback</button>
       </nav>
       <div class="sidebar-month">
         <button id="prevMonth">&#8592;</button>
@@ -222,6 +223,35 @@
         <div id="historicoList" class="historico-list"></div>
       </div>
 
+      <!-- Feedback View -->
+      <div id="view-feedback" class="view">
+        <div class="page-header">
+          <h2>Feedback</h2>
+        </div>
+
+        <div class="form-card">
+          <h3>Enviar Sugestão ou Problema</h3>
+          <div class="feedback-form">
+            <select id="feedbackTipo">
+              <option value="sugestao">💡 Sugestão</option>
+              <option value="bug">🐛 Bug / Problema</option>
+              <option value="elogio">⭐ Elogio</option>
+              <option value="outro">📝 Outro</option>
+            </select>
+            <textarea id="feedbackMsg" placeholder="Descreva sua sugestão, problema ou comentário..." rows="4"></textarea>
+            <button id="sendFeedbackBtn">Enviar Feedback</button>
+          </div>
+        </div>
+
+        <div class="list-card" id="feedbackListCard">
+          <div class="list-header">
+            <h3>Sugestões da Comunidade</h3>
+            <span id="feedbackAdminBadge" style="display:none" class="year-badge">👑 Admin</span>
+          </div>
+          <div id="feedbackList"></div>
+          <p id="feedbackEmpty" class="empty-msg">Nenhum feedback ainda.</p>
+        </div>
+      </div>
       <!-- Categorias View -->
       <div id="view-categorias" class="view">
         <div class="page-header">
