@@ -188,7 +188,7 @@ function renderLista(items) {
       <div class="item-dot ${item.tipo}"></div>
       <div class="item-info">
         <div class="item-desc">${item.descricao}</div>
-        <div class="item-meta">${item.categoria || 'Outros'}${item.pagamento ? ' · ' + item.pagamento : ''}${item.data ? ' · ' + fmtDate(item.data) : ''}${item.observacao ? ' · ' + item.observacao : ''}</div>
+        <div class="item-meta">${item.categoria || 'Outros'}${item.pagamento ? ' · ' + item.pagamento : ''}${item.banco ? ' · ' + item.banco : ''}${item.data ? ' · ' + fmtDate(item.data) : ''}${item.observacao ? ' · ' + item.observacao : ''}</div>
       </div>
       <span class="item-valor ${item.tipo}">${item.tipo === 'receita' ? '+' : '-'} ${fmt(Number(item.valor))}</span>
       <button class="btn-edit" data-id="${item.id}" title="Editar">✏️</button>
@@ -569,11 +569,13 @@ document.getElementById('addBtn').addEventListener('click', async () => {
   const data = document.getElementById('data').value;
   const pagamento = document.getElementById('pagamento').value;
   const observacao = document.getElementById('observacao').value.trim();
+  const banco = document.getElementById('banco').value;
   if (!descricao || isNaN(valor) || valor <= 0) { alert('Preencha a descrição e um valor válido.'); return; }
-  await addItem({ descricao, valor, tipo, categoria, data, pagamento, observacao });
+  await addItem({ descricao, valor, tipo, categoria, data, pagamento, observacao, banco });
   document.getElementById('descricao').value = '';
   document.getElementById('valor').value = '';
   document.getElementById('observacao').value = '';
+  document.getElementById('banco').value = '';
   document.getElementById('data').valueAsDate = new Date();
 });
 
@@ -635,6 +637,7 @@ function openEditModal(id) {
   document.getElementById('editData').value = item.data || '';
   document.getElementById('editPagamento').value = item.pagamento || 'Dinheiro';
   document.getElementById('editObservacao').value = item.observacao || '';
+  document.getElementById('editBanco').value = item.banco || '';
   document.getElementById('editModal').style.display = 'flex';
 }
 
@@ -650,8 +653,9 @@ document.getElementById('saveEditBtn').addEventListener('click', async () => {
   const data = document.getElementById('editData').value;
   const pagamento = document.getElementById('editPagamento').value;
   const observacao = document.getElementById('editObservacao').value.trim();
+  const banco = document.getElementById('editBanco').value;
   if (!descricao || isNaN(valor) || valor <= 0) { alert('Preencha a descrição e um valor válido.'); return; }
-  await editItem(editingId, { descricao, valor, tipo, categoria, data, pagamento, observacao });
+  await editItem(editingId, { descricao, valor, tipo, categoria, data, pagamento, observacao, banco });
   closeEditModal();
 });
 
