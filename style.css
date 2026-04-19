@@ -223,6 +223,22 @@ body {
   .login-right { padding: 32px 24px; }
 }
 
+.nav-badge {
+  background: var(--despesa);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 20px;
+  margin-left: 4px;
+  vertical-align: middle;
+  line-height: 1.6;
+}
+
+.nav-btn.active .nav-badge {
+  background: rgba(255,255,255,0.3);
+}
+
 /* Sidebar user */
 .sidebar-user {
   display: flex;

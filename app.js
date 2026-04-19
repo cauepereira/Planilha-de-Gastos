@@ -92,6 +92,7 @@ function initApp(user) {
   document.getElementById('userName').textContent = user.user_metadata?.full_name?.split(' ')[0] || '';
   document.getElementById('data').valueAsDate = new Date();
   loadCategorias().then(() => loadItems());
+  checkFeedbackBadge();
 }
 
 // ---- Feedback ----
@@ -124,7 +125,21 @@ document.getElementById('sendFeedbackBtn').addEventListener('click', async () =>
   renderFeedback();
 });
 
-async function renderFeedback() {
+async function checkFeedbackBadge() {
+  if (currentUser.id !== ADMIN_ID) return;
+  const lastSeen = localStorage.getItem('feedbackLastSeen') || '1970-01-01';
+  const { data } = await supabase
+    .from('feedbacks')
+    .select('id')
+    .gt('created_at', lastSeen);
+  const badge = document.getElementById('feedbackBadge');
+  if (data && data.length > 0) {
+    badge.textContent = data.length > 99 ? '99+' : data.length;
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
+}
   const isAdmin = currentUser.id === ADMIN_ID;
   const container = document.getElementById('feedbackList');
   const emptyMsg = document.getElementById('feedbackEmpty');
@@ -154,7 +169,7 @@ async function renderFeedback() {
       </div>
       <p class="feedback-msg">${f.mensagem}</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
-        <button class="btn-thread" data-id="${f.id}" data-msg="${f.mensagem.replace(/"/g,'&quot;')}" data-tipo="${TIPO_LABELS[f.tipo]||f.tipo}">💬 Ver conversa</button>
+        <button class="btn-thread" data-id="${f.id}" data-msg="${f.mensagem.replace(/"/g,'&quot;')}" data-tipo="${TIPO_LABELS[f.tipo]||f.tipo}" data-uid="${f.user_id}">💬 Ver conversa</button>
         ${f.resolvido
           ? `<span class="feedback-resolved-badge">✓ Resolvido</span>`
           : isAdmin
@@ -166,7 +181,7 @@ async function renderFeedback() {
   `).join('');
 
   container.querySelectorAll('.btn-thread').forEach(btn => {
-    btn.addEventListener('click', () => openFeedbackModal(btn.dataset.id, btn.dataset.msg, btn.dataset.tipo));
+    btn.addEventListener('click', () => openFeedbackModal(btn.dataset.id, btn.dataset.msg, btn.dataset.tipo, btn.dataset.uid));
   });
 
   if (isAdmin) {
@@ -179,11 +194,19 @@ async function renderFeedback() {
   }
 }
 
-async function openFeedbackModal(feedbackId, msgOriginal, tipo) {
+async function openFeedbackModal(feedbackId, msgOriginal, tipo, feedbackUserId) {
   currentFeedbackId = feedbackId;
+  const isAdmin = currentUser.id === ADMIN_ID;
+  const isOwner = currentUser.id === feedbackUserId;
+
   document.getElementById('feedbackModalTipo').textContent = tipo;
   document.getElementById('feedbackModalMsg').textContent = msgOriginal;
   document.getElementById('feedbackReplyMsg').value = '';
+
+  // Só mostra o campo de resposta para o dono ou admin
+  const replyBox = document.querySelector('.feedback-reply-box');
+  replyBox.style.display = (isAdmin || isOwner) ? 'flex' : 'none';
+
   document.getElementById('feedbackModal').style.display = 'flex';
   await loadRespostas(feedbackId);
 }
@@ -726,7 +749,13 @@ function switchView(name) {
   if (name === 'historico') renderHistorico();
   if (name === 'graficos') renderGraficos();
   if (name === 'categorias') renderCatView();
-  if (name === 'feedback') renderFeedback();
+  if (name === 'feedback') {
+    renderFeedback();
+    if (currentUser.id === ADMIN_ID) {
+      localStorage.setItem('feedbackLastSeen', new Date().toISOString());
+      document.getElementById('feedbackBadge').style.display = 'none';
+    }
+  }
 }
 
 // ---- Events ----
