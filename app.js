@@ -200,7 +200,7 @@ function renderLista(items) {
       <div class="item-dot ${item.tipo}"></div>
       <div class="item-info">
         <div class="item-desc">${item.descricao}</div>
-        <div class="item-meta">${item.categoria || 'Outros'}${item.data ? ' · ' + fmtDate(item.data) : ''}</div>
+        <div class="item-meta">${item.categoria || 'Outros'}${item.pagamento ? ' · ' + item.pagamento : ''}${item.data ? ' · ' + fmtDate(item.data) : ''}${item.observacao ? ' · ' + item.observacao : ''}</div>
       </div>
       <span class="item-valor ${item.tipo}">${item.tipo === 'receita' ? '+' : '-'} ${fmt(Number(item.valor))}</span>
       <button class="btn-edit" data-id="${item.id}" title="Editar">✏️</button>
@@ -498,12 +498,15 @@ document.getElementById('addBtn').addEventListener('click', async () => {
   const tipo = document.getElementById('tipo').value;
   const categoria = document.getElementById('categoria').value;
   const data = document.getElementById('data').value;
+  const pagamento = document.getElementById('pagamento').value;
+  const observacao = document.getElementById('observacao').value.trim();
 
   if (!descricao || isNaN(valor) || valor <= 0) { alert('Preencha a descrição e um valor válido.'); return; }
 
-  await addItem({ descricao, valor, tipo, categoria, data });
+  await addItem({ descricao, valor, tipo, categoria, data, pagamento, observacao });
   document.getElementById('descricao').value = '';
   document.getElementById('valor').value = '';
+  document.getElementById('observacao').value = '';
   document.getElementById('data').valueAsDate = new Date();
 });
 
@@ -595,6 +598,8 @@ function openEditModal(id) {
   document.getElementById('editTipo').value = item.tipo;
   document.getElementById('editCategoria').value = item.categoria || 'Outros';
   document.getElementById('editData').value = item.data || '';
+  document.getElementById('editPagamento').value = item.pagamento || 'Dinheiro';
+  document.getElementById('editObservacao').value = item.observacao || '';
   document.getElementById('editModal').style.display = 'flex';
 }
 
@@ -614,9 +619,11 @@ document.getElementById('saveEditBtn').addEventListener('click', async () => {
   const tipo = document.getElementById('editTipo').value;
   const categoria = document.getElementById('editCategoria').value;
   const data = document.getElementById('editData').value;
+  const pagamento = document.getElementById('editPagamento').value;
+  const observacao = document.getElementById('editObservacao').value.trim();
 
   if (!descricao || isNaN(valor) || valor <= 0) { alert('Preencha a descrição e um valor válido.'); return; }
 
-  await editItem(editingId, { descricao, valor, tipo, categoria, data });
+  await editItem(editingId, { descricao, valor, tipo, categoria, data, pagamento, observacao });
   closeEditModal();
 });
