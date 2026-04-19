@@ -852,6 +852,94 @@ body.light .hist-item:hover { background: #e8eaf6; }
 
 .btn-close:hover { color: var(--despesa); }
 
+.cat-creator {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.cat-emoji-preview {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: var(--surface2);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+  transition: border-color 0.2s;
+}
+
+.cat-creator-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cat-creator-right input {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.cat-creator-right input:focus { border-color: var(--accent); }
+.cat-creator-right input::placeholder { color: var(--text-muted); }
+
+.emoji-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+.emoji-opt {
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.15s, transform 0.1s;
+  line-height: 1;
+}
+
+.emoji-opt:hover { background: var(--border); transform: scale(1.2); }
+.emoji-opt.selected { background: var(--accent); }
+
+.cat-creator-right button {
+  background: linear-gradient(135deg, var(--accent), #5a4fcf);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  align-self: flex-start;
+}
+
+.cat-creator-right button:hover { opacity: 0.9; }
+
+@media (max-width: 480px) {
+  .cat-creator { flex-direction: column; align-items: stretch; }
+  .cat-emoji-preview { width: 100%; height: 56px; }
+  .cat-creator-right button { align-self: stretch; }
+}
+
 .cat-form {
   display: flex;
   gap: 10px;

@@ -227,14 +227,21 @@
         <div class="page-header">
           <h2>Categorias</h2>
         </div>
+
         <div class="form-card">
           <h3>Nova Categoria</h3>
-          <div class="cat-form">
-            <input type="text" id="catEmoji" placeholder="Emoji" maxlength="2" />
-            <input type="text" id="catNome" placeholder="Nome da categoria" />
-            <button id="addCatBtn">+ Adicionar</button>
+          <div class="cat-creator">
+            <div class="cat-emoji-preview" id="catEmojiPreview">📦</div>
+            <div class="cat-creator-right">
+              <input type="text" id="catNome" placeholder="Nome da categoria" />
+              <div class="emoji-picker">
+                <span class="emoji-opt" data-emoji="😀">😀</span><span class="emoji-opt" data-emoji="😂">😂</span><span class="emoji-opt" data-emoji="❤️">❤️</span><span class="emoji-opt" data-emoji="🔥">🔥</span><span class="emoji-opt" data-emoji="⭐">⭐</span><span class="emoji-opt" data-emoji="✅">✅</span><span class="emoji-opt" data-emoji="💰">💰</span><span class="emoji-opt" data-emoji="💵">💵</span><span class="emoji-opt" data-emoji="💳">💳</span><span class="emoji-opt" data-emoji="📈">📈</span><span class="emoji-opt" data-emoji="📉">📉</span><span class="emoji-opt" data-emoji="🏦">🏦</span><span class="emoji-opt" data-emoji="🍔">🍔</span><span class="emoji-opt" data-emoji="🍕">🍕</span><span class="emoji-opt" data-emoji="🍺">🍺</span><span class="emoji-opt" data-emoji="☕">☕</span><span class="emoji-opt" data-emoji="🛒">🛒</span><span class="emoji-opt" data-emoji="🚗">🚗</span><span class="emoji-opt" data-emoji="✈️">✈️</span><span class="emoji-opt" data-emoji="🚌">🚌</span><span class="emoji-opt" data-emoji="⛽">⛽</span><span class="emoji-opt" data-emoji="🏠">🏠</span><span class="emoji-opt" data-emoji="🏡">🏡</span><span class="emoji-opt" data-emoji="🛋️">🛋️</span><span class="emoji-opt" data-emoji="💡">💡</span><span class="emoji-opt" data-emoji="💊">💊</span><span class="emoji-opt" data-emoji="🏥">🏥</span><span class="emoji-opt" data-emoji="🧘">🧘</span><span class="emoji-opt" data-emoji="🎮">🎮</span><span class="emoji-opt" data-emoji="🎬">🎬</span><span class="emoji-opt" data-emoji="🎵">🎵</span><span class="emoji-opt" data-emoji="📚">📚</span><span class="emoji-opt" data-emoji="🎓">🎓</span><span class="emoji-opt" data-emoji="👕">👕</span><span class="emoji-opt" data-emoji="👟">👟</span><span class="emoji-opt" data-emoji="👜">👜</span><span class="emoji-opt" data-emoji="💄">💄</span><span class="emoji-opt" data-emoji="💅">💅</span><span class="emoji-opt" data-emoji="🪒">🪒</span><span class="emoji-opt" data-emoji="📱">📱</span><span class="emoji-opt" data-emoji="💻">💻</span><span class="emoji-opt" data-emoji="🖥️">🖥️</span><span class="emoji-opt" data-emoji="🐶">🐶</span><span class="emoji-opt" data-emoji="🐱">🐱</span><span class="emoji-opt" data-emoji="🌱">🌱</span><span class="emoji-opt" data-emoji="🎁">🎁</span><span class="emoji-opt" data-emoji="🏋️">🏋️</span><span class="emoji-opt" data-emoji="⚽">⚽</span><span class="emoji-opt" data-emoji="📦">📦</span>
+              </div>
+              <button id="addCatBtn">+ Adicionar Categoria</button>
+            </div>
           </div>
         </div>
+
         <div class="list-card">
           <h3 style="font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px">Suas Categorias</h3>
           <div id="catCustomList"></div>

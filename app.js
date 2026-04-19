@@ -150,12 +150,21 @@ function renderCatView() {
 }
 
 document.getElementById('addCatBtn').addEventListener('click', async () => {
-  const emoji = document.getElementById('catEmoji').value.trim() || '📦';
+  const emoji = document.getElementById('catEmojiPreview').textContent.trim() || '📦';
   const nome = document.getElementById('catNome').value.trim();
   if (!nome) { alert('Digite o nome da categoria.'); return; }
   await addCategoria(emoji, nome);
-  document.getElementById('catEmoji').value = '';
   document.getElementById('catNome').value = '';
+  document.getElementById('catEmojiPreview').textContent = '📦';
+  document.querySelectorAll('.emoji-opt').forEach(e => e.classList.remove('selected'));
+});
+
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('emoji-opt')) {
+    document.querySelectorAll('.emoji-opt').forEach(el => el.classList.remove('selected'));
+    e.target.classList.add('selected');
+    document.getElementById('catEmojiPreview').textContent = e.target.dataset.emoji;
+  }
 });
 
 // ---- Supabase CRUD ----
