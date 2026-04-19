@@ -35,7 +35,9 @@ const CATS_FIXAS = [
 
 let cachedCategorias = [];
 
-let currentDate = new Date();
+const ADMIN_ID = 'e264a92c-25d8-49f2-bf04-955bc799a64c';
+
+const currentDate = new Date();
 let currentYear = currentDate.getFullYear();
 let currentMonth = currentDate.getMonth();
 let activeFilter = 'todos';
@@ -96,7 +98,6 @@ function initApp(user) {
 }
 
 // ---- Feedback ----
-const ADMIN_ID = 'e264a92c-25d8-49f2-bf04-955bc799a64c';
 
 const TIPO_LABELS = {
   sugestao: '💡 Sugestão',
