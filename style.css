@@ -788,6 +788,82 @@ body.light .hist-item:hover { background: #e8eaf6; }
 
 .btn-thread:hover { border-color: var(--accent); color: var(--accent); }
 
+.parcela-preview {
+  font-size: 0.85rem;
+  color: var(--accent);
+  margin-top: 12px;
+  min-height: 20px;
+}
+
+.parcela-item {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 10px;
+}
+
+.parcela-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.parcela-item-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.parcela-item-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.parcela-progress-wrap {
+  height: 8px;
+  background: var(--surface);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.parcela-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #5a4fcf);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.parcela-item-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.parcela-status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.btn-cancel-parcela {
+  background: none;
+  border: 1px solid var(--despesa);
+  color: var(--despesa);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+}
+
+.btn-cancel-parcela:hover { background: var(--despesa); color: white; }
+
 /* Categorias */
 .cat-section {
   background: var(--surface);

@@ -72,6 +72,7 @@
         <button class="nav-btn" data-view="graficos">📈 Gráficos</button>
         <button class="nav-btn" data-view="historico">📅 Histórico</button>
         <button class="nav-btn" data-view="categorias">🏷️ Categorias</button>
+        <button class="nav-btn" data-view="parcelas">💳 Parcelas</button>
         <button class="nav-btn" data-view="feedback">💬 Feedback <span id="feedbackBadge" class="nav-badge" style="display:none"></span></button>
       </nav>
       <div class="sidebar-month">
@@ -265,6 +266,45 @@
           <p id="feedbackEmpty" class="empty-msg">Nenhum feedback ainda.</p>
         </div>
       </div>
+      <!-- Parcelas View -->
+      <div id="view-parcelas" class="view">
+        <div class="page-header">
+          <h2>Parcelas</h2>
+        </div>
+
+        <div class="form-card">
+          <h3>Nova Compra Parcelada</h3>
+          <div class="form-grid">
+            <input type="text" id="parcelaDesc" placeholder="Descrição (ex: Celular)" />
+            <input type="number" id="parcelaValorTotal" placeholder="Valor total (R$)" min="0" step="0.01" />
+            <input type="number" id="parcelaNum" placeholder="Nº de parcelas" min="2" max="120" />
+            <select id="parcelaCategoria"></select>
+            <select id="parcelaBanco">
+              <option value="">🏦 Banco (opcional)</option>
+              <option value="Nubank">🟣 Nubank</option>
+              <option value="Itaú Unibanco">🟠 Itaú Unibanco</option>
+              <option value="Banco do Brasil">🟡 Banco do Brasil</option>
+              <option value="Bradesco">🔴 Bradesco</option>
+              <option value="Caixa Econômica Federal">🔵 Caixa Econômica Federal</option>
+              <option value="Santander Brasil">🔴 Santander Brasil</option>
+              <option value="Mercado Pago">🟢 Mercado Pago</option>
+              <option value="C6 Bank">⚫ C6 Bank</option>
+              <option value="PicPay">🟢 PicPay</option>
+              <option value="Outro">📦 Outro</option>
+            </select>
+            <input type="date" id="parcelaDataInicio" />
+            <button id="addParcelaBtn" style="grid-column:span 1">+ Criar Parcelas</button>
+          </div>
+          <p class="parcela-preview" id="parcelaPreview"></p>
+        </div>
+
+        <div class="list-card">
+          <h3 style="font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:16px">Compras Parceladas Ativas</h3>
+          <div id="parcelasList"></div>
+          <p id="parcelasEmpty" class="empty-msg">Nenhuma compra parcelada.</p>
+        </div>
+      </div>
+
       <!-- Categorias View -->
       <div id="view-categorias" class="view">
         <div class="page-header">

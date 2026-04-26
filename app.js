@@ -485,6 +485,154 @@ document.getElementById('feedbackModal').addEventListener('click', e => {
   }
 });
 
+// ---- Parcelas ----
+function populateParcelaCategoria() {
+  const opts = allCats().map(c => `<option value="${c.nome}">${c.emoji} ${c.nome}</option>`).join('');
+  const el = document.getElementById('parcelaCategoria');
+  if (el) el.innerHTML = opts;
+}
+
+// Preview ao digitar
+['parcelaValorTotal','parcelaNum'].forEach(id => {
+  document.getElementById(id)?.addEventListener('input', updateParcelaPreview);
+});
+
+function updateParcelaPreview() {
+  const total = parseFloat(document.getElementById('parcelaValorTotal').value);
+  const num = parseInt(document.getElementById('parcelaNum').value);
+  const preview = document.getElementById('parcelaPreview');
+  if (total > 0 && num > 1) {
+    const parcela = total / num;
+    preview.textContent = `${num}x de ${fmt(parcela)} = ${fmt(total)} no total`;
+  } else {
+    preview.textContent = '';
+  }
+}
+
+document.getElementById('addParcelaBtn').addEventListener('click', async () => {
+  const descricao = document.getElementById('parcelaDesc').value.trim();
+  const valorTotal = parseFloat(document.getElementById('parcelaValorTotal').value);
+  const numParcelas = parseInt(document.getElementById('parcelaNum').value);
+  const categoria = document.getElementById('parcelaCategoria').value;
+  const banco = document.getElementById('parcelaBanco').value;
+  const dataInicio = document.getElementById('parcelaDataInicio').value;
+
+  if (!descricao || isNaN(valorTotal) || valorTotal <= 0 || isNaN(numParcelas) || numParcelas < 2) {
+    alert('Preencha descrição, valor total e número de parcelas (mínimo 2).');
+    return;
+  }
+  if (!dataInicio) { alert('Selecione a data da primeira parcela.'); return; }
+
+  const valorParcela = valorTotal / numParcelas;
+
+  // Salva o parcelamento
+  const { data: parcelaData, error } = await supabase.from('parcelas').insert({
+    user_id: currentUser.id,
+    descricao, valor_total: valorTotal, valor_parcela: valorParcela,
+    num_parcelas: numParcelas, parcelas_pagas: 0,
+    categoria, banco, pagamento: 'Crédito', data_inicio: dataInicio
+  }).select().single();
+
+  if (error) { alert('Erro ao criar parcelamento.'); return; }
+
+  // Lança todas as parcelas nos meses correspondentes
+  const [startYear, startMonth, startDay] = dataInicio.split('-').map(Number);
+  const inserts = [];
+  for (let i = 0; i < numParcelas; i++) {
+    let m = (startMonth - 1 + i) % 12;
+    let y = startYear + Math.floor((startMonth - 1 + i) / 12);
+    const dataStr = `${y}-${String(m+1).padStart(2,'0')}-${String(startDay).padStart(2,'0')}`;
+    inserts.push({
+      user_id: currentUser.id,
+      descricao: `${descricao} (${i+1}/${numParcelas})`,
+      valor: valorParcela,
+      tipo: 'despesa',
+      categoria, banco,
+      pagamento: 'Crédito',
+      data: dataStr,
+      year: y, month: m,
+      observacao: `Parcela ${i+1} de ${numParcelas}`
+    });
+  }
+
+  await supabase.from('items').insert(inserts);
+
+  // Limpa o form
+  document.getElementById('parcelaDesc').value = '';
+  document.getElementById('parcelaValorTotal').value = '';
+  document.getElementById('parcelaNum').value = '';
+  document.getElementById('parcelaDataInicio').value = '';
+  document.getElementById('parcelaPreview').textContent = '';
+
+  alert(`✅ ${numParcelas} parcelas de ${fmt(valorParcela)} criadas com sucesso!`);
+  renderParcelas();
+  loadItems();
+});
+
+async function renderParcelas() {
+  const container = document.getElementById('parcelasList');
+  const emptyMsg = document.getElementById('parcelasEmpty');
+  container.innerHTML = '<p class="empty-msg">Carregando...</p>';
+
+  const { data, error } = await supabase.from('parcelas').select('*')
+    .eq('user_id', currentUser.id).order('created_at', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    container.innerHTML = ''; emptyMsg.style.display = 'block'; return;
+  }
+  emptyMsg.style.display = 'none';
+
+  // Para cada parcelamento, conta quantas parcelas já passaram
+  const now = new Date();
+  container.innerHTML = data.map(p => {
+    const [sy, sm] = p.data_inicio.split('-').map(Number);
+    const mesesPassados = (now.getFullYear() - sy) * 12 + (now.getMonth() + 1 - sm);
+    const pagas = Math.min(Math.max(mesesPassados, 0), p.num_parcelas);
+    const restantes = p.num_parcelas - pagas;
+    const pct = (pagas / p.num_parcelas) * 100;
+    const valorRestante = restantes * p.valor_parcela;
+
+    return `
+      <div class="parcela-item">
+        <div class="parcela-item-header">
+          <div>
+            <div class="parcela-item-title">${p.descricao}</div>
+            <div class="parcela-item-meta">${p.categoria || ''}${p.banco ? ' · ' + p.banco : ''} · ${fmt(p.valor_parcela)}/mês</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-weight:700;color:var(--despesa)">${fmt(p.valor_total)}</div>
+            <div class="parcela-item-meta">total</div>
+          </div>
+        </div>
+        <div class="parcela-progress-wrap">
+          <div class="parcela-progress-bar" style="width:${pct}%"></div>
+        </div>
+        <div class="parcela-item-footer">
+          <span class="parcela-status">${pagas} de ${p.num_parcelas} parcelas pagas · Restam ${fmt(valorRestante)}</span>
+          <button class="btn-cancel-parcela" data-id="${p.id}">🗑 Cancelar</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  container.querySelectorAll('.btn-cancel-parcela').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Cancelar este parcelamento? Os lançamentos futuros serão removidos.')) return;
+      const p = data.find(x => x.id === btn.dataset.id);
+      if (!p) return;
+      // Remove parcelas futuras
+      const now = new Date();
+      await supabase.from('items').delete()
+        .eq('user_id', currentUser.id)
+        .like('observacao', `Parcela % de ${p.num_parcelas}`)
+        .like('descricao', `${p.descricao} (%`)
+        .gte('year', now.getFullYear());
+      await supabase.from('parcelas').delete().eq('id', p.id);
+      renderParcelas();
+      loadItems();
+    });
+  });
+}
+
 // ---- Categorias ----
 async function loadCategorias() {
   const { data } = await supabase.from('categorias').select('*').eq('user_id', currentUser.id).order('created_at');
@@ -500,6 +648,7 @@ function populateCatSelects() {
   const opts = allCats().map(c => `<option value="${c.nome}">${c.emoji} ${c.nome}</option>`).join('');
   document.getElementById('categoria').innerHTML = opts;
   document.getElementById('editCategoria').innerHTML = opts;
+  populateParcelaCategoria();
 }
 
 async function addCategoria(emoji, nome) {
@@ -551,6 +700,7 @@ function switchView(name) {
   if (name === 'historico') renderHistorico();
   if (name === 'graficos') renderGraficos();
   if (name === 'categorias') renderCatView();
+  if (name === 'parcelas') { renderParcelas(); populateParcelaCategoria(); }
   if (name === 'feedback') {
     renderFeedback();
     if (currentUser.id === ADMIN_ID) {
