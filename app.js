@@ -83,6 +83,7 @@ function initApp(user) {
   document.getElementById('data').valueAsDate = new Date();
   loadCategorias().then(() => loadItems());
   checkFeedbackBadge();
+  checkSaldoAnterior();
 }
 
 // ---- Supabase CRUD ----
@@ -484,6 +485,69 @@ document.getElementById('feedbackModal').addEventListener('click', e => {
     document.getElementById('feedbackModal').style.display = 'none'; currentFeedbackId = null;
   }
 });
+
+// ---- Saldo anterior ----
+async function checkSaldoAnterior() {
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth();
+  const anoAtual = hoje.getFullYear();
+
+  // Calcula mês anterior
+  let mesAnt = mesAtual - 1;
+  let anoAnt = anoAtual;
+  if (mesAnt < 0) { mesAnt = 11; anoAnt--; }
+
+  // Verifica se já transferiu esse mês
+  const chave = `saldoTransferido_${anoAtual}_${mesAtual}`;
+  if (localStorage.getItem(chave)) return;
+
+  // Busca itens do mês anterior
+  const { data } = await supabase.from('items').select('tipo, valor')
+    .eq('user_id', currentUser.id).eq('year', anoAnt).eq('month', mesAnt);
+
+  if (!data || data.length === 0) return;
+
+  let rec = 0, desp = 0;
+  data.forEach(i => { if (i.tipo === 'receita') rec += Number(i.valor); else desp += Number(i.valor); });
+  const saldo = rec - desp;
+
+  if (saldo === 0) return;
+
+  const tipo = saldo > 0 ? 'receita' : 'despesa';
+  const valor = Math.abs(saldo);
+  const mesNome = MONTHS[mesAnt];
+
+  document.getElementById('saldoModalMsg').innerHTML =
+    `O mês de <strong>${mesNome} ${anoAnt}</strong> fechou com saldo de <strong style="color:${saldo > 0 ? 'var(--receita)' : 'var(--despesa)'}">${fmt(saldo)}</strong>.<br><br>Deseja lançar esse valor como <strong>${saldo > 0 ? 'receita' : 'despesa'}</strong> no mês atual?`;
+
+  document.getElementById('saldoModal').style.display = 'flex';
+
+  document.getElementById('saldoSimBtn').onclick = async () => {
+    await supabase.from('items').insert({
+      user_id: currentUser.id,
+      descricao: `Saldo transferido de ${mesNome} ${anoAnt}`,
+      valor,
+      tipo,
+      categoria: 'Outros',
+      data: `${anoAtual}-${String(mesAtual + 1).padStart(2,'0')}-01`,
+      year: anoAtual,
+      month: mesAtual,
+      observacao: `Saldo do mês anterior`
+    });
+    localStorage.setItem(chave, '1');
+    document.getElementById('saldoModal').style.display = 'none';
+    loadItems();
+  };
+
+  document.getElementById('saldoNaoBtn').onclick = () => {
+    localStorage.setItem(chave, '1');
+    document.getElementById('saldoModal').style.display = 'none';
+  };
+
+  document.getElementById('closeSaldoModal').onclick = () => {
+    document.getElementById('saldoModal').style.display = 'none';
+  };
+}
 
 // ---- Parcelas ----
 function populateParcelaCategoria() {
