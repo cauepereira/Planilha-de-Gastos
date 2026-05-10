@@ -334,6 +334,34 @@
     </main>
   </div>
 
+  <!-- Modal Parcela -->
+  <div id="parcelaModal" class="modal-overlay" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Editar Parcelamento</h3>
+        <button id="closeParcelaModal" class="btn-close">✕</button>
+      </div>
+      <div class="form-grid">
+        <input type="text" id="editParcelaDesc" placeholder="Descrição" style="grid-column:span 2" />
+        <select id="editParcelaCategoria"></select>
+        <select id="editParcelaBanco">
+          <option value="">🏦 Banco (opcional)</option>
+          <option value="Nubank">🟣 Nubank</option>
+          <option value="Itaú Unibanco">🟠 Itaú Unibanco</option>
+          <option value="Banco do Brasil">🟡 Banco do Brasil</option>
+          <option value="Bradesco">🔴 Bradesco</option>
+          <option value="Caixa Econômica Federal">🔵 Caixa Econômica Federal</option>
+          <option value="Santander Brasil">🔴 Santander Brasil</option>
+          <option value="Mercado Pago">🟢 Mercado Pago</option>
+          <option value="C6 Bank">⚫ C6 Bank</option>
+          <option value="PicPay">🟢 PicPay</option>
+          <option value="Outro">📦 Outro</option>
+        </select>
+        <button id="saveParcelaBtn" style="grid-column:span 2;padding:12px">💾 Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Saldo Anterior -->
   <div id="saldoModal" class="modal-overlay" style="display:none">
     <div class="modal">

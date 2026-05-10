@@ -486,6 +486,38 @@ document.getElementById('feedbackModal').addEventListener('click', e => {
   }
 });
 
+let editingParcelaId = null;
+
+function openParcelaModal(p) {
+  editingParcelaId = p.id;
+  document.getElementById('editParcelaDesc').value = p.descricao;
+  document.getElementById('editParcelaCategoria').innerHTML =
+    allCats().map(c => `<option value="${c.nome}" ${c.nome === p.categoria ? 'selected' : ''}>${c.emoji} ${c.nome}</option>`).join('');
+  document.getElementById('editParcelaBanco').value = p.banco || '';
+  document.getElementById('parcelaModal').style.display = 'flex';
+}
+
+document.getElementById('closeParcelaModal').addEventListener('click', () => {
+  document.getElementById('parcelaModal').style.display = 'none'; editingParcelaId = null;
+});
+document.getElementById('parcelaModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('parcelaModal')) {
+    document.getElementById('parcelaModal').style.display = 'none'; editingParcelaId = null;
+  }
+});
+
+document.getElementById('saveParcelaBtn').addEventListener('click', async () => {
+  const descricao = document.getElementById('editParcelaDesc').value.trim();
+  const categoria = document.getElementById('editParcelaCategoria').value;
+  const banco = document.getElementById('editParcelaBanco').value;
+  if (!descricao) { alert('Preencha a descrição.'); return; }
+
+  await supabase.from('parcelas').update({ descricao, categoria, banco }).eq('id', editingParcelaId);
+  document.getElementById('parcelaModal').style.display = 'none';
+  editingParcelaId = null;
+  renderParcelas();
+});
+
 // ---- Saldo anterior ----
 async function checkSaldoAnterior() {
   const hoje = new Date();
@@ -673,10 +705,17 @@ async function renderParcelas() {
         </div>
         <div class="parcela-item-footer">
           <span class="parcela-status">${pagas} de ${p.num_parcelas} parcelas pagas · Restam ${fmt(valorRestante)}</span>
-          <button class="btn-cancel-parcela" data-id="${p.id}">🗑 Cancelar</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn-thread btn-edit-parcela" data-id="${p.id}">✏️ Editar</button>
+            <button class="btn-cancel-parcela" data-id="${p.id}">🗑 Cancelar</button>
+          </div>
         </div>
       </div>`;
   }).join('');
+
+  container.querySelectorAll('.btn-edit-parcela').forEach(btn => {
+    btn.addEventListener('click', () => openParcelaModal(data.find(x => x.id === btn.dataset.id)));
+  });
 
   container.querySelectorAll('.btn-cancel-parcela').forEach(btn => {
     btn.addEventListener('click', async () => {
