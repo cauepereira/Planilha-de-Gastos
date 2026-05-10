@@ -491,6 +491,9 @@ let editingParcelaId = null;
 function openParcelaModal(p) {
   editingParcelaId = p.id;
   document.getElementById('editParcelaDesc').value = p.descricao;
+  document.getElementById('editParcelaValor').value = p.valor_total;
+  document.getElementById('editParcelaInfo').textContent =
+    `Atual: ${p.num_parcelas}x de ${fmt(p.valor_parcela)} = ${fmt(p.valor_total)}`;
   document.getElementById('editParcelaCategoria').innerHTML =
     allCats().map(c => `<option value="${c.nome}" ${c.nome === p.categoria ? 'selected' : ''}>${c.emoji} ${c.nome}</option>`).join('');
   document.getElementById('editParcelaBanco').value = p.banco || '';
@@ -510,12 +513,39 @@ document.getElementById('saveParcelaBtn').addEventListener('click', async () => 
   const descricao = document.getElementById('editParcelaDesc').value.trim();
   const categoria = document.getElementById('editParcelaCategoria').value;
   const banco = document.getElementById('editParcelaBanco').value;
+  const novoValorTotal = parseFloat(document.getElementById('editParcelaValor').value);
   if (!descricao) { alert('Preencha a descrição.'); return; }
 
-  await supabase.from('parcelas').update({ descricao, categoria, banco }).eq('id', editingParcelaId);
+  // Busca o parcelamento atual para saber o num_parcelas
+  const { data: pAtual } = await supabase.from('parcelas').select('*').eq('id', editingParcelaId).single();
+  const novoValorParcela = !isNaN(novoValorTotal) && novoValorTotal > 0
+    ? novoValorTotal / pAtual.num_parcelas
+    : pAtual.valor_parcela;
+  const novoTotal = !isNaN(novoValorTotal) && novoValorTotal > 0 ? novoValorTotal : pAtual.valor_total;
+
+  // Atualiza o parcelamento
+  await supabase.from('parcelas').update({ descricao, categoria, banco, valor_total: novoTotal, valor_parcela: novoValorParcela }).eq('id', editingParcelaId);
+
+  // Atualiza lançamentos futuros se o valor mudou
+  if (novoValorParcela !== pAtual.valor_parcela) {
+    const hoje = new Date();
+    const { data: itens } = await supabase.from('items').select('id, year, month')
+      .eq('user_id', currentUser.id)
+      .like('observacao', `Parcela % de ${pAtual.num_parcelas}`)
+      .like('descricao', `${pAtual.descricao} (%`);
+
+    if (itens) {
+      const futuros = itens.filter(i => i.year > hoje.getFullYear() || (i.year === hoje.getFullYear() && i.month >= hoje.getMonth()));
+      for (const item of futuros) {
+        await supabase.from('items').update({ valor: novoValorParcela, descricao: `${descricao} (${item.descricao.match(/\((\d+)\//)?.[1] || '?'}/${pAtual.num_parcelas})`, categoria, banco }).eq('id', item.id);
+      }
+    }
+  }
+
   document.getElementById('parcelaModal').style.display = 'none';
   editingParcelaId = null;
   renderParcelas();
+  loadItems();
 });
 
 // ---- Saldo anterior ----
