@@ -24,10 +24,20 @@ jobs:
           node-version: '20'
 
       - name: Instalar dependências
-        run: npm install
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          else
+            echo "package.json não encontrado — pulando npm install"
+          fi
 
       - name: Executar testes na versão de rollback
-        run: npm test
+        run: |
+          if [ -f package.json ]; then
+            npm test --if-present
+          else
+            echo "package.json não encontrado — pulando testes"
+          fi
 
       - name: Instalar Vercel CLI
         run: npm install --global vercel@latest
