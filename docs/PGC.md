@@ -1,7 +1,7 @@
 # Plano de Gerenciamento de Configuração — MoneyMap
 
-**Versão:** 1.0  
-**Data:** 09/09/2026  
+**Versão:** 1.1  
+**Data:** 25/11/2026  
 **Projeto:** MoneyMap — Aplicação Web de Gestão Financeira Pessoal  
 **Desenvolvedor:** Cauê P.
 
@@ -257,8 +257,10 @@ Criação dos arquivos de migração SQL no diretório `/migrations`, documentan
 **Marco 3 — Implantação do pipeline de CI**
 Configuração do workflow de integração contínua (`.github/workflows/ci.yml`), com execução automática de lint, verificação de segredos no código e validação do padrão de commits a cada Pull Request aberto.
 
-**Marco 4 — Implantação do pipeline de CD**
-Configuração do workflow de entrega contínua (`.github/workflows/cd.yml`), com deploy automático na Vercel a partir do merge na branch `main`. A partir deste marco, toda mudança aprovada chega a produção sem intervenção manual.
+**Marco 4 — Implantação do pipeline de CD** ✅ *Concluído em 25/11/2026*
+Configuração do workflow de entrega contínua (`.github/workflows/cd.yml`), com deploy automático na Vercel a partir do merge na branch `main`, execução dos testes antes do deploy e geração automática de tag de versão semântica. O pipeline foi validado com sucesso — evidência registrada em `evidencias/08-cd-pipeline-success.png`.
+
+![CD Pipeline Success](../evidencias/08-cd-pipeline-success.png)
 
 **Marco 5 — Primeira release automatizada**
 Execução completa do fluxo de ponta a ponta pela primeira vez: commit seguindo Conventional Commits → PR aprovado → CI verde → merge → CD executado → tag de versão gerada automaticamente → changelog atualizado. Este marco valida o funcionamento integral do pipeline.
