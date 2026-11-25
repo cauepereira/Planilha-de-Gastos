@@ -26,6 +26,14 @@ function calcularSaldo(items) {
   return receitas - despesas;
 }
 
+function validarValorLancamento(valor) {
+  const num = Number(valor);
+  if (isNaN(num) || num <= 0) {
+    throw new Error('O valor do lançamento deve ser maior que zero.');
+  }
+  return num;
+}
+
 function calcularTotalParcelas(valorTotal, numParcelas) {
   if (!valorTotal || !numParcelas || numParcelas <= 0) return 0;
   return Number((valorTotal / numParcelas).toFixed(2));
@@ -110,5 +118,31 @@ describe('calcularTotalParcelas', () => {
 
   test('retorna 0 para número de parcelas negativo', () => {
     expect(calcularTotalParcelas(1200, -3)).toBe(0);
+  });
+});
+
+describe('validarValorLancamento', () => {
+  test('aceita valor positivo', () => {
+    expect(validarValorLancamento(100)).toBe(100);
+  });
+
+  test('aceita valor decimal positivo', () => {
+    expect(validarValorLancamento(0.01)).toBe(0.01);
+  });
+
+  test('rejeita valor zero', () => {
+    expect(() => validarValorLancamento(0)).toThrow('O valor do lançamento deve ser maior que zero.');
+  });
+
+  test('rejeita valor negativo', () => {
+    expect(() => validarValorLancamento(-50)).toThrow('O valor do lançamento deve ser maior que zero.');
+  });
+
+  test('rejeita valor não numérico', () => {
+    expect(() => validarValorLancamento('abc')).toThrow('O valor do lançamento deve ser maior que zero.');
+  });
+
+  test('converte string numérica válida', () => {
+    expect(validarValorLancamento('200')).toBe(200);
   });
 });
