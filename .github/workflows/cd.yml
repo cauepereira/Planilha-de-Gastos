@@ -24,13 +24,14 @@ jobs:
       - name: Executar testes antes do deploy
         run: npm test
 
+      - name: Instalar Vercel CLI
+        run: npm install --global vercel@latest
+
       - name: Deploy na Vercel (Produção)
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Gerar tag de versão semântica
         run: |
